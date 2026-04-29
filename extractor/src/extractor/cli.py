@@ -50,6 +50,12 @@ def extract(codex_root: str, tag: str | None, out: str, mode: str) -> None:
     table.add_row("Pass 3: uncategorized (rule miss)", str(report.pass3_uncategorized))
     table.add_row("Pass 3 (orphan audit): files written", str(report.orphan_written))
     table.add_row("Pass 3 (orphan audit): empty skipped", str(report.orphan_skipped_empty))
+    table.add_row(
+        "Pass 4: verification",
+        "[green]passed[/green]" if report.pass5_verify_passed else "[red]FAILED[/red]",
+    )
+    table.add_row("Pass 5: README + CHANGELOG indexed", str(report.pass5_indexed_files))
+    table.add_row("Pass 5: total tokens", f"{report.pass5_total_tokens:,}")
     console.print(table)
 
 

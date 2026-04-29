@@ -1,7 +1,16 @@
-# codex-system-prompts — SPEC v0.6
+# codex-system-prompts — SPEC v0.7
 
-> Status: **M1–M5a complete; M5b ready**.
-> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29) → v0.6 §2.3 M5 split (2026-04-29).
+> Status: **M1–M5b complete; M5c skipped (optional); M6 ready**.
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29) → v0.6 §2.3 M5 split (2026-04-29) → v0.7 §11 roadmap reflecting actual completion (2026-04-29).
+
+### Change log (v0.6 → v0.7) — §11 reflecting actuals
+
+§11 was authored at v0.1 with M-numbering that predates the v0.3 pipeline rewrite (Pass 1.5 added) and the v0.6 M5 split. v0.7 updates §11 to reflect what actually happened:
+
+- M2 actually delivered Passes 1+2+3 (Pass 2 was simple enough to fold in at M2 rather than wait).
+- M3 delivered Pass 1.5 skeleton + orphan audit (Pass 2 was already done in M2).
+- M5 was split (per v0.6 amendment) into M5a (static const parsing — done), M5b (ContextualUserFragment auto-discovery — done), M5c (real shim crate — optional, skipped because static parsing covered all deferred-M5 placeholders identified in M4 Layer A).
+- Total effort estimate (5–6 days) was conservative; actual ~hours of focused work for M1–M5b due to static-parsing simplification, mature tooling (tiktoken/click/rich), and skipping M5c.
 
 ### Change log (v0.5 → v0.6) — M5 split + §2.3 reframe
 
@@ -586,21 +595,33 @@ All decisions locked as of v0.2 (2026-04-29). Implementation may proceed.
 
 ---
 
-## 11. Implementation roadmap (post-approval)
+## 11. Implementation roadmap (live status)
 
-| Milestone | Deliverable | Est. effort |
-|---|---|---|
-| **M0** | SPEC v1.0 approved (this doc) | (this turn) |
-| **M1** | Repo skeleton (LICENSE, NOTICE, DISCLAIMER, SPEC, README placeholder) | 0.5 day |
-| **M2** | Extractor Passes 1+3 covering `.md` + `models.json` + TOML | 1 day |
-| **M3** | Pass 2 reachability filter; backfill `orphan/` audit | 0.5 day |
-| **M4** | Pass 4 snapshot verification CI gate | 0.5 day |
-| **M5** | Inline-string + programmatic-prompt extraction (heaviest pass; depends on §10.2 + §10.7) | 1.5–2 days |
-| **M6** | Token counts + README/CHANGELOG generation | 0.5 day |
-| **M7** | GH Action automation (per §10.8) | 0.5 day |
-| **M8** | First public snapshot at current Codex tag → push | 0.25 day |
+Updated as of v0.7. Effort column shows original estimate; "Actual" reflects what was delivered.
 
-**Total: ~5–6 days of focused work**, risk concentrated in M5.
+| Milestone | Deliverable | Status | Commit | Original est. | Actual |
+|---|---|---|---|---|---|
+| **M0** | SPEC approved (evolved through v0.7) | ✅ done | (in conversation) | 0d | n/a |
+| **M1** | Repo skeleton (LICENSE, NOTICE, DISCLAIMER, SPEC, README placeholder) | ✅ done | `62215a7` | 0.5d | <0.5d |
+| **M2** | Extractor Passes 1+2+3 (`.md` + `models.json` + TOML; Pass 2 folded in) | ✅ done | `370316c` | 1d | <1d |
+| **M3** | Pass 1.5 skeleton + orphan audit | ✅ done | `c4eb679` | 0.5d | <0.5d |
+| **M4** | Pass 4 verification + SPEC §2.5 Layer A reframe (v0.5 amendment) | ✅ done | `4f0f317` | 0.5d | <0.5d |
+| **M5a** | Pass 1.5 implementation — Rust source static parsing | ✅ done | `6646e8d` | (split from M5) | <0.5d |
+| **M5b** | Pass 1.6 ContextualUserFragment auto-discovery | ✅ done | `a5a8f61` | (split from M5) | <0.5d |
+| **M5c** | Real in-workspace shim crate (SPEC §2.3.1 original plan) | ⏸ skipped (optional per v0.6) | — | (split from M5) | 0 (not needed; static parsing covered all deferred-M5 placeholders) |
+| **M6** | Pass 5 — README + CHANGELOG generation (Piebald-style index) | ⏳ pending | — | 0.5d | — |
+| **M7** | GH Action automation (per §10.8) | ⏳ pending | — | 0.5d | — |
+| **M8** | First public snapshot at current Codex tag → push | ⏳ pending | — | 0.25d | — |
+
+**Original total**: ~5–6 days, risk concentrated in M5.
+**Actual to date (M0–M5b)**: hours of focused work. M5c skip eliminated the highest-risk leg. Remaining M6+M7+M8 estimated ~1.25 day.
+
+### Notable amendments along the way
+
+- **v0.4** (cosmetic): §12 ↔ §13 swap to restore monotonic section numbering.
+- **v0.5**: §2.5 Layer A reframed from line-level snapshot trace-back to placeholder structural mapping (snapshots are placeholder-redacted, not raw content).
+- **v0.6**: §2.3 M5 split. Original "in-workspace shim crate" plan deferred to optional M5c; static Rust source parsing prioritized for M5a/M5b.
+- **v0.7**: §11 roadmap updated to reflect actuals. Effort estimates were conservative.
 
 ---
 

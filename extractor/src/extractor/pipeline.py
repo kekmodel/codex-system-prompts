@@ -14,6 +14,8 @@ from . import (
     pass2_denylist,
     pass3_emit,
     pass3_orphans,
+    pass4_verify,
+    pass5_index,
 )
 
 
@@ -31,6 +33,9 @@ class RunReport:
     pass3_uncategorized: int      # candidates with no rule match (separate from orphan-walk)
     orphan_written: int
     orphan_skipped_empty: int
+    pass5_indexed_files: int
+    pass5_total_tokens: int
+    pass5_verify_passed: bool
     codex_version: str
     codex_commit: str
 
@@ -86,6 +91,12 @@ def run(codex_root: Path, out_root: Path, tag: str | None) -> RunReport:
         orphans, codex_rs, out_root, codex_version=version, codex_commit=commit
     )
 
+    # Pass 4: verification (used as input to Pass 5 coverage section)
+    verify_report = pass4_verify.verify(codex_root, out_root, extractor_dir)
+
+    # Pass 5: index generation (README + CHANGELOG)
+    index_result = pass5_index.run(out_root, version, commit, verify_report)
+
     return RunReport(
         pass1_count=len(candidates),
         pass1_models_count=len(model_entries),
@@ -99,6 +110,9 @@ def run(codex_root: Path, out_root: Path, tag: str | None) -> RunReport:
         pass3_uncategorized=len(emitted.orphans),
         orphan_written=len(orphan_result.written),
         orphan_skipped_empty=len(orphan_result.skipped_empty),
+        pass5_indexed_files=index_result.file_count,
+        pass5_total_tokens=index_result.total_tokens,
+        pass5_verify_passed=verify_report.passed,
         codex_version=version,
         codex_commit=commit,
     )
