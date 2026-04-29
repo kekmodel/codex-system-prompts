@@ -1,0 +1,64 @@
+# Verification gate (SPEC §8.4)
+#
+# Runs Pass 4 verification on every PR and push to main. Fails the check
+# (and blocks PR merge once branch protection is enabled) on:
+#   - any unmapped Layer A placeholder
+#   - any auto-include / models / allow-list miss
+#   - any token-count drift
+#   - any frontmatter schema fail
+
+name: Verify mirror
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mirror repo
+        uses: actions/checkout@v4
+
+      - name: Setup uv (Python)
+        uses: astral-sh/setup-uv@v4
+
+      - name: Setup Rust toolchain (codex's pinned 1.93.0)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.93.0"
+          components: clippy, rustfmt, rust-src
+
+      - name: Read codex_version from a captured frontmatter
+        id: tag
+        run: |
+          set -euo pipefail
+          # All captured prompts share codex_version; read from the first one we find.
+          TAG=$(grep -h -m1 "^codex_version:" prompts/base-instructions/*.md | head -1 | sed 's/^codex_version: *//')
+          if [ -z "$TAG" ]; then
+            echo "Could not determine codex_version from prompts/." >&2
+            exit 1
+          fi
+          echo "codex_version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Recorded codex_version: $TAG"
+
+      - name: Clone codex at recorded tag
+        run: |
+          git clone --depth 1 --branch "${{ steps.tag.outputs.codex_version }}" \
+            --filter=blob:none https://github.com/openai/codex.git /tmp/codex
+
+      - name: Install extractor
+        working-directory: extractor
+        run: uv sync
+
+      - name: Run verify
+        working-directory: extractor
+        run: |
+          uv run extractor verify \
+            --codex-root /tmp/codex \
+            --out ..
