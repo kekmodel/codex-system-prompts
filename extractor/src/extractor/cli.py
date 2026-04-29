@@ -57,5 +57,104 @@ def diff(category: str) -> None:
     raise NotImplementedError("M5/M6 will implement.")
 
 
+@main.command()
+@click.option("--codex-root", required=True, type=click.Path(exists=True, file_okay=False))
+@click.option("--out", required=True, type=click.Path(exists=True, file_okay=False))
+def verify(codex_root: str, out: str) -> None:
+    """Run Pass 4 verification — Layer A (placeholder mapping) + Layer B (completeness) + token drift + frontmatter schema (SPEC §2.5)."""
+    import sys
+
+    from . import codex as codex_mod
+    from . import pass4_verify
+
+    codex_rs_root = codex_mod.resolve_codex_root(codex_root)
+    out_root = Path(out).resolve()
+    extractor_dir = out_root / "extractor"
+    report = pass4_verify.verify(codex_rs_root, out_root, extractor_dir)
+
+    # ===== Layer A =====
+    table_a = Table(title=f"Layer A — Structural mapping ({report.snapshot_files} snapshots)")
+    table_a.add_column("Placeholder", style="cyan")
+    table_a.add_column("Status", style="green")
+    table_a.add_column("Snap count", justify="right")
+    rows: list[tuple[str, str, int]] = []
+    for ph in sorted(report.placeholders_seen):
+        target = pass4_verify.PLACEHOLDER_MAP.get(ph)
+        n = report.placeholders_seen[ph]
+        if target is None:
+            rows.append((ph, "[red]UNMAPPED[/red]", n))
+        elif target == "deferred_m5":
+            rows.append((ph, "[yellow]deferred to M5[/yellow]", n))
+        elif target.startswith("runtime_"):
+            rows.append((ph, f"runtime ({target})", n))
+        elif target == "out_of_scope":
+            rows.append((ph, "[blue]out of scope (SPEC §10.4)[/blue]", n))
+        else:
+            ok = (ph, target) in report.placeholders_static_ok
+            rows.append((ph, f"[green]captured @ {target}[/green]" if ok else f"[red]MISSING @ {target}[/red]", n))
+    for r in rows:
+        table_a.add_row(r[0], r[1], str(r[2]))
+    console.print(table_a)
+
+    # ===== Layer B + auxiliary =====
+    table_b = Table(title="Layer B — Completeness + auxiliary checks")
+    table_b.add_column("Check", style="cyan")
+    table_b.add_column("Result", style="green")
+    table_b.add_row("auto-include candidates", str(report.autoinclude_count))
+    table_b.add_row(
+        "auto-include missing",
+        f"[red]{len(report.autoinclude_missing)}[/red]" if report.autoinclude_missing else "[green]0[/green]",
+    )
+    table_b.add_row("models.json entries", str(report.models_count))
+    table_b.add_row(
+        "models missing",
+        f"[red]{len(report.models_missing)}[/red]" if report.models_missing else "[green]0[/green]",
+    )
+    table_b.add_row("allow-list entries (M5)", str(report.allowlist_count))
+    table_b.add_row("token-count check_files", str(report.token_check_count))
+    table_b.add_row(
+        "token-count drift",
+        f"[red]{len(report.token_drift)}[/red]" if report.token_drift else "[green]0[/green]",
+    )
+    table_b.add_row("frontmatter check_files", str(report.frontmatter_check_count))
+    table_b.add_row(
+        "frontmatter schema fail",
+        f"[red]{len(report.frontmatter_invalid)}[/red]" if report.frontmatter_invalid else "[green]0[/green]",
+    )
+    console.print(table_b)
+
+    # ===== Detail dumps for failures =====
+    if report.placeholders_unmapped:
+        console.print("\n[red]Unmapped placeholders (Layer A spec bug):[/red]")
+        for p in report.placeholders_unmapped:
+            console.print(f"  • [yellow]{p}[/yellow] (used in {report.placeholders_seen[p]} snapshots)")
+    if report.placeholders_static_missing:
+        console.print("\n[red]Static-mapped placeholders with empty/missing target:[/red]")
+        for ph, target in report.placeholders_static_missing:
+            console.print(f"  • {ph} → {target}")
+    if report.autoinclude_missing:
+        console.print("\n[red]Auto-include candidates not captured:[/red]")
+        for p in report.autoinclude_missing[:20]:
+            console.print(f"  • codex-rs/{p}")
+    if report.models_missing:
+        console.print(f"\n[red]Model entries not captured:[/red] {report.models_missing}")
+    if report.token_drift:
+        console.print("\n[red]Token-count drift:[/red]")
+        for f, recorded, recomputed in report.token_drift[:20]:
+            console.print(f"  • {f}: recorded={recorded}, recomputed={recomputed}")
+    if report.frontmatter_invalid:
+        console.print("\n[red]Frontmatter schema failures:[/red]")
+        for f, msg in report.frontmatter_invalid[:20]:
+            console.print(f"  • {f}: {msg}")
+
+    # ===== Final verdict =====
+    if report.passed:
+        console.print("\n[bold green]✓ All verification checks passed.[/bold green]")
+        sys.exit(0)
+    else:
+        console.print("\n[bold red]✗ Verification FAILED.[/bold red]")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

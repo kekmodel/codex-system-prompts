@@ -1,7 +1,30 @@
-# codex-system-prompts — SPEC v0.4
+# codex-system-prompts — SPEC v0.5
 
-> Status: **M1 complete; M2 ready**. v0.4 is a cosmetic hotfix only (no semantic changes).
-> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29).
+> Status: **M1–M4 complete; M5 ready**.
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29).
+
+### Change log (v0.4 → v0.5) — Layer A reframed to match actual snapshot format
+
+When implementing M4 we discovered codex's snapshot files (`model_visible_layout__*.snap`, `compact*.snap`, `guardian/snapshots/*.snap`) are **placeholder-redacted**, not raw-content. Bodies look like:
+
+```
+00:message/developer:<PERMISSIONS_INSTRUCTIONS>
+01:message/user:<ENVIRONMENT_CONTEXT:cwd=<CWD>>
+04:message/user:<SUMMARIZATION_PROMPT>
+```
+
+Therefore the v0.3 wording "every line of every snapshot must trace back to a captured prompt fragment" is operationally undefined — there are no raw lines to trace. v0.5 reframes Layer A as **structural mapping**: each `<PLACEHOLDER>` in a snapshot must be classifiable into exactly one of:
+
+1. A captured corpus path/category (e.g. `<PERMISSIONS_INSTRUCTIONS>` → `prompts/permission/`).
+2. A runtime-injected variable (e.g. `<CWD>`, `<COMPACTION_SUMMARY>`).
+3. Out of scope per spec rationale (e.g. `<SKILLS_INSTRUCTIONS>` → SPEC §10.4).
+4. Deferred to M5 programmatic capture (e.g. `<ENVIRONMENT_CONTEXT>`, `<personality_spec>`).
+
+Unmapped placeholders are spec bugs (CI-blocking). The mapping table lives in `extractor/src/extractor/pass4_verify.py::PLACEHOLDER_MAP`.
+
+Layer B (completeness) is unchanged.
+
+This change is **less ambitious** than v0.3's wording but is the only check that's operationally feasible against the actual snapshot format. v0.3 wasn't wrong about the *direction* (snapshots as a verification oracle), only about the *grain* (lines → placeholders).
 > Codex baseline anchor: **latest upstream tag** (currently `rust-v0.126.0-alpha.12`, commit `921a304c36`).
 > Mirror philosophy: Piebald's `claude-code-system-prompts` (single tree at latest + git tags + frontmatter + CHANGELOG.md), adapted to Codex's hybrid architecture.
 
@@ -199,39 +222,53 @@ This context is recorded **verbatim** in each `*-default.md`'s `render_context:`
 - Frontmatter records the original JSON pointer (`source.json_pointer: "/gpt-5.2-codex/base_instructions"`).
 - A single `data-models-manifest.md` records the slug → file mapping for programmatic consumers.
 
-### 2.5 Verification — two layers (T1.3)
+### 2.5 Verification — two layers (T1.3, refined v0.5)
 
-> **v0.3 amendment**: v0.2 implied "100% snapshot trace-back ⇒ complete capture". This is wrong — snapshots only cover prompts that some test exercises. v0.3 separates verification into accuracy and completeness.
+> **v0.3 history**: v0.2 implied "100% snapshot trace-back ⇒ complete capture", which was wrong because snapshots only cover prompts some test exercises. v0.3 split verification into accuracy + completeness.
+>
+> **v0.5 history**: v0.3 still assumed snapshots contain raw prompt content traceable line-by-line. M4 discovery: codex's snapshots are placeholder-redacted (`<PERMISSIONS_INSTRUCTIONS>`, `<personality_spec>`, etc.), not raw content. Layer A reframed accordingly.
 
-#### Layer A — Accuracy (snapshot trace-back, lower bound)
+#### Layer A — Structural mapping (snapshot placeholders ↔ captured corpus)
 
-For every snapshot at `core/tests/suite/snapshots/model_visible_layout__*.snap` and `core/src/guardian/snapshots/*.snap` (downloaded from upstream at the recorded tag):
+For every snapshot at `core/tests/suite/snapshots/{model_visible_layout,compact,compact_remote,compact_resume_fork,realtime_conversation,pending_input}__*.snap` and `core/src/guardian/snapshots/*.snap`:
 
-- Every line must trace back to a captured prompt fragment OR be a documented runtime-injected variable (cwd, current time, git branch, etc.).
-- Lines that cannot be attributed are spec bugs (logged + CI-blocking).
+1. Extract every angle-bracket placeholder (e.g. `<PERMISSIONS_INSTRUCTIONS>`, `<personality_spec>`, `<ENVIRONMENT_CONTEXT:cwd=<CWD>>`).
+2. Classify each placeholder via `extractor/src/extractor/pass4_verify.py::PLACEHOLDER_MAP` into one of:
+   - **Captured static** — placeholder maps to a path/dir under `prompts/` that must exist with non-empty content (e.g. `<SUMMARIZATION_PROMPT>` → `prompts/mode/mode-compact-prompt.md`).
+   - **Runtime-injected** — `<CWD>`, `<COMPACTION_SUMMARY>`, `<image>`, `<input_image>`, etc. No corpus mapping required.
+   - **Out of scope** — `<SKILLS_INSTRUCTIONS>` per SPEC §10.4 (skills are project-local, not built-in).
+   - **Deferred to M5** — `<ENVIRONMENT_CONTEXT>`, `<personality_spec>`, `<model_switch>`, `<realtime_conversation>`, `<collaboration_mode>` (programmatic ContextualUserFragment-class prompts captured by M5 via the in-workspace shim, §2.3).
 
-**Proves**: when a captured prompt is exercised by tests, our extraction matches shipping behavior.
+3. Any placeholder lacking a classification is a spec bug → CI-blocking.
 
-**Does NOT prove**: that all shipping prompts are captured. A prompt never exercised in any snapshot is invisible to this layer.
+**Proves**: every prompt-class that appears in upstream tests is either (a) currently captured, (b) explicitly excluded by the spec, (c) explicitly deferred to a future milestone, or (d) a runtime variable. The mapping table itself is the source of truth for what we know exists.
 
-#### Layer B — Completeness (allow-list + auto-include inventory)
+**Does NOT prove**: line-level fidelity (the snapshot doesn't contain raw lines to compare against), nor that the deferred-M5 placeholders are correctly captured *yet* (M5 unblocks that).
 
-- Every entry in `extractor/allow_list.toml` must produce ≥1 captured file.
-- Every `.md`/`.lark`/`.toml`/`.txt` matched by Pass 1 auto-include must produce a captured file (or be deny-listed with rationale).
+#### Layer B — Completeness (auto-include + models + allow-list inventory)
+
+- Every Pass 1 auto-include candidate (`.md`/`.lark`/`.toml`/`.txt` reached by `include_str!`/`include_bytes!` from a shipping crate) must produce ≥1 captured file in `prompts/` (or be a documented empty file like `agent/builtins/explorer.toml`).
 - Every per-model entry in `models.json` must produce a `base-instructions-<slug>.md`.
+- Every entry in `extractor/allow_list.toml` must produce ≥1 captured file (M5 enforces; M3/M4 stub: empty allow-list trivially satisfies).
 
 **Proves**: nothing is dropped between source enumeration and corpus emission.
 
-**Does NOT prove**: that the allow-list itself is complete. Allow-list completeness is bounded by human curation; new codex prompts added without an allow-list update are missed by both layers — flagged as a maintenance task at every re-extraction.
+**Does NOT prove**: that the allow-list itself is complete (bounded by human curation; flagged as a maintenance task at every re-extraction).
+
+#### Auxiliary checks (M4)
+
+- **Token-count drift**: every captured file's frontmatter `tokens.o200k_base` must equal the recomputed `tiktoken` count of its body. Catches accidental whitespace edits or extractor bugs.
+- **Frontmatter schema**: every captured file's frontmatter must contain the §3.3 required fields (`name`, `category`, `codex_version`, `codex_commit`, `source`, `extraction`, `variables`, `tokens`, `description`).
 
 #### Coverage reporting
 
-README's "Coverage" section reports both metrics, labeled clearly:
+README's "Coverage" section reports:
 
-- **Accuracy**: `N% of snapshot lines traced` (target 100%; CI fails below).
-- **Completeness**: `M% of allow-list + auto-include entries captured` (target 100%; CI fails below).
+- **Layer A**: `K placeholders seen / K classified` (target K/K with no `UNMAPPED`; deferred-M5 placeholders are listed but don't fail the gate).
+- **Layer B**: `auto-include captured / total`, `models captured / total`.
+- **Aux**: token-drift count = 0 expected; frontmatter-schema-fail = 0 expected.
 
-Neither is a "completeness of capture" guarantee. README explicitly warns about Layer A's limitation.
+Neither layer is a "100% capture" guarantee. README explicitly warns: Layer A only validates *what tests exercise*, Layer B is bounded by allow-list curation.
 
 ---
 
