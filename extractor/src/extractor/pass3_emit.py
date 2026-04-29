@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .categorizer import categorize
 from .frontmatter import render as render_frontmatter
+from .pass1_5_allowlist import AllowListCapture
 from .pass1_autoinclude import Candidate
 from .pass1_models import ModelEntry
 from .tokens import count_o200k_base
@@ -16,6 +17,7 @@ from .tokens import count_o200k_base
 class EmitResult:
     written: list[Path]            # paths written (relative to mirror repo)
     orphans: list[Candidate]       # candidates with no matching category rule
+    allowlist_written: int = 0     # count of allow-list captures emitted
 
 
 def _kind_label(file_path: Path) -> str:
@@ -45,6 +47,7 @@ def _description(target_rel: Path, category: str) -> str:
 def emit(
     candidates: list[Candidate],
     model_entries: list[ModelEntry],
+    allowlist_captures: list[AllowListCapture],
     out_root: Path,
     codex_version: str,
     codex_commit: str,
@@ -131,4 +134,38 @@ def emit(
         out_path.write_text(fm + me.base_instructions)
         written.append(out_path.relative_to(out_root))
 
-    return EmitResult(written=written, orphans=orphans)
+    # ========== Allow-list captures (Pass 1.5 — M5a) ==========
+    allowlist_written = 0
+    for cap in allowlist_captures:
+        if not cap.body.strip():
+            continue
+        token_count = count_o200k_base(cap.body)
+        callsite = f"{cap.source_rel}:{cap.source_line}"
+        extra: dict = {}
+        if cap.symbol:
+            extra.setdefault("source", {})["symbol"] = cap.symbol
+        if cap.extra:
+            for k, v in cap.extra.items():
+                extra.setdefault("source", {})[k] = v
+
+        fm = render_frontmatter(
+            name=f"{cap.category.capitalize()}: {cap.filename}",
+            category=cap.category,
+            codex_version=codex_version,
+            codex_commit=codex_commit,
+            source_path=Path("codex-rs") / cap.source_rel,
+            source_kind=cap.source_kind,
+            callsite=callsite,
+            extraction_pass=1.5,
+            extraction_method=cap.extraction_method,
+            tokens_o200k_base=token_count,
+            description=cap.description,
+            extra=extra or None,
+        )
+        out_path = out_root / "prompts" / cap.category / f"{cap.filename}.md"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(fm + cap.body)
+        written.append(out_path.relative_to(out_root))
+        allowlist_written += 1
+
+    return EmitResult(written=written, orphans=orphans, allowlist_written=allowlist_written)

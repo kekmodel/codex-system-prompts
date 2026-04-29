@@ -15,7 +15,7 @@ def render(
     source_path: Path,
     source_kind: str,
     callsite: str | None,
-    extraction_pass: int,
+    extraction_pass: int | float,
     extraction_method: str,
     tokens_o200k_base: int,
     description: str,

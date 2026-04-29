@@ -110,7 +110,11 @@ def verify(codex_root: str, out: str) -> None:
         "models missing",
         f"[red]{len(report.models_missing)}[/red]" if report.models_missing else "[green]0[/green]",
     )
-    table_b.add_row("allow-list entries (M5)", str(report.allowlist_count))
+    table_b.add_row("allow-list entries", str(report.allowlist_count))
+    table_b.add_row(
+        "allow-list missing",
+        f"[red]{len(report.allowlist_missing)}[/red]" if report.allowlist_missing else "[green]0[/green]",
+    )
     table_b.add_row("token-count check_files", str(report.token_check_count))
     table_b.add_row(
         "token-count drift",
@@ -138,6 +142,10 @@ def verify(codex_root: str, out: str) -> None:
             console.print(f"  • codex-rs/{p}")
     if report.models_missing:
         console.print(f"\n[red]Model entries not captured:[/red] {report.models_missing}")
+    if report.allowlist_missing:
+        console.print("\n[red]Allow-list entries not captured:[/red]")
+        for ident, path in report.allowlist_missing:
+            console.print(f"  • {ident} → expected at {path}")
     if report.token_drift:
         console.print("\n[red]Token-count drift:[/red]")
         for f, recorded, recomputed in report.token_drift[:20]:

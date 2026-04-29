@@ -51,17 +51,22 @@ def run(codex_root: Path, out_root: Path, tag: str | None) -> RunReport:
     # Pass 1 (cont.): models.json fan-out
     model_entries = pass1_models.fan_out(codex_rs)
 
-    # Pass 1.5: allow-list resolution (M3 skeleton: empty until M5 shim)
+    # Pass 1.5: allow-list resolution (M5a — Rust source static parsing)
     allow_entries = pass1_5_allowlist.load(extractor_dir)
-    pass1_5_allowlist.resolve(allow_entries, codex_rs)  # raises if non-empty
+    allow_captures = pass1_5_allowlist.resolve(allow_entries, codex_rs)
 
     # Pass 2: denylist filter
     denylist = pass2_denylist.load(extractor_dir)
     kept, dropped = pass2_denylist.filter_candidates(candidates, denylist)
 
-    # Pass 3: categorize & emit (auto-include + models fan-out)
+    # Pass 3: categorize & emit (auto-include + models fan-out + allow-list captures)
     emitted = pass3_emit.emit(
-        kept, model_entries, out_root, codex_version=version, codex_commit=commit
+        kept,
+        model_entries,
+        allow_captures,
+        out_root,
+        codex_version=version,
+        codex_commit=commit,
     )
 
     # Pass 3 (orphan audit): walk codex-rs/ for prompt-shaped files NOT captured.

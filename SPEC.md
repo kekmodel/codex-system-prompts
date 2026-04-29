@@ -1,7 +1,17 @@
-# codex-system-prompts — SPEC v0.5
+# codex-system-prompts — SPEC v0.6
 
-> Status: **M1–M4 complete; M5 ready**.
-> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29).
+> Status: **M1–M5a complete; M5b ready**.
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29) → v0.6 §2.3 M5 split (2026-04-29).
+
+### Change log (v0.5 → v0.6) — M5 split + §2.3 reframe
+
+v0.3's "in-workspace shim crate" plan (§2.3.1) was found impractical at the start of M5: codex-core is workspace-internal with `publish = false`, has an async tokio runtime requirement, complex `Session` dependencies, and needs invasive workspace patching to link from outside. v0.6 splits M5 into three phases that prioritize **Rust source static parsing** (achievable today without a build step) over runtime shimming:
+
+- **M5a**: Static constant extraction via Rust source parsing (Pass 1.5 implementation). Captures `(pub )?const FOO: &str = r#"..."#;` patterns, `fn () -> &'static str` bodies, and inline raw strings near explicit marker lines. No build step required.
+- **M5b**: ContextualUserFragment marker + body-template extraction via Rust regex parsing. Captures ~25 fragment START/END markers and `format!`/`writeln!` template skeletons. Resolves the 5 deferred-M5 placeholders in §2.5 Layer A.
+- **M5c (optional)**: Real shim crate (§2.3.1 original plan). Only pursued if M5a+M5b leaves a meaningful coverage gap. Static parsing is preferred when sufficient.
+
+§2.3 reframed: hybrid is now "static parsing (M5a+M5b primary) + snapshot harvest (Path 2 fallback) + shim crate (M5c if needed)". A shim crate ship is **not** required for M5 success; only needed if dynamic rendering proves necessary for fidelity.
 
 ### Change log (v0.4 → v0.5) — Layer A reframed to match actual snapshot format
 

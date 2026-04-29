@@ -1,34 +1,121 @@
 # extractor/allow_list.toml
 #
-# Curated list of prompt-bearing source symbols that auto-include cannot detect
-# mechanically. Each entry: file:line:symbol triple, 1-line rationale, and a
-# `reviewed_at` codex commit SHA recording when this entry was last verified
-# against upstream.
+# Curated list of prompt-bearing source symbols Pass 1 cannot detect mechanically.
+# Each entry has:
+#   kind         : "rust_const_str" | "rust_fn_static_str" | "rust_inline_at_marker"
+#   file         : path under codex-rs/ to the .rs file
+#   symbol       : (rust_const_str / rust_fn_static_str) — the constant/function name
+#   marker       : (rust_inline_at_marker) — string to anchor on; first r#"..."# after wins
+#   category     : prompts/<category>/ destination
+#   filename     : kebab-case stem (no .md)
+#   description  : one-line rationale, written into frontmatter
+#   reviewed_at  : codex commit SHA when this entry was last verified upstream
 #
-# Source-of-truth for non-mechanical prompt extraction. See /SPEC.md §2.1 (B)
-# and §2.3.1 (shim function list).
-#
-# Populated at M2-M5. M1 ships an empty seed.
+# See /SPEC.md §2.1 (B), §2.3.1 (shim function list).
 
-# === Programmatic shim functions (SPEC §2.3.1) ===
-# To be populated from the explicit shim function list in SPEC §2.3.1.
-# Each entry routes the symbol to the in-workspace Rust shim; the shim
-# invokes it with the synthetic default context and emits both
-# *-template.md and *-default.md siblings.
-# Example shape (M5 will fill):
-#
-# [[entry]]
-# kind = "programmatic"
-# crate = "codex-core"
-# path = "src/context/environment.rs"
-# symbol = "EnvironmentContextFragment::body"
-# category = "context-fragment"
-# rationale = "Builds the <environment_context> XML fragment with cwd, sandbox state."
-# reviewed_at = "<codex commit SHA>"
+# ============ code-mode/description.rs constants ============
 
-# === Inline raw-string constants ===
-# Inline `r#"..."#` constants reachable at runtime.
-# (M5 will populate; ~10-15 entries expected.)
+[[entry]]
+kind = "rust_const_str"
+file = "code-mode/src/description.rs"
+symbol = "EXEC_DESCRIPTION_TEMPLATE"
+category = "code-mode"
+filename = "code-mode-exec-description-template"
+description = "Code-mode `exec` tool description template — programmatic preface for the JS-orchestration `exec` tool."
+reviewed_at = "ebdf3a878c"
 
-# === ContextualUserFragment body() impls ===
-# (M5 will populate; ~25 entries expected.)
+[[entry]]
+kind = "rust_const_str"
+file = "code-mode/src/description.rs"
+symbol = "WAIT_DESCRIPTION_TEMPLATE"
+category = "code-mode"
+filename = "code-mode-wait-description-template"
+description = "Code-mode `wait` tool description template (paired with `exec`)."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_const_str"
+file = "code-mode/src/description.rs"
+symbol = "MCP_TYPESCRIPT_PREAMBLE"
+category = "code-mode"
+filename = "code-mode-mcp-typescript-preamble"
+description = "TypeScript schema preamble injected into code-mode tool description for the MCP nested-tool API."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_const_str"
+file = "code-mode/src/description.rs"
+symbol = "CODE_MODE_ONLY_PREFACE"
+category = "code-mode"
+filename = "code-mode-only-preface"
+description = "Preface added when code-mode is the only tool exposure (no other MCP tools listed)."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_const_str"
+file = "code-mode/src/description.rs"
+symbol = "DEFERRED_NESTED_TOOLS_GUIDANCE"
+category = "code-mode"
+filename = "code-mode-deferred-nested-tools-guidance"
+description = "Guidance noting that some nested MCP/app tools may be omitted from the description but are still callable via `tools` / `ALL_TOOLS`."
+reviewed_at = "ebdf3a878c"
+
+# ============ tools/src — static tool descriptions ============
+
+[[entry]]
+kind = "rust_const_str"
+file = "tools/src/apply_patch_tool.rs"
+symbol = "APPLY_PATCH_JSON_TOOL_DESCRIPTION"
+category = "tool"
+filename = "tool-apply-patch-json-description"
+description = "JSON-API variant of the apply_patch tool description (paired with apply_patch_tool_instructions.md / apply_patch.lark grammar)."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_const_str"
+file = "tools/src/agent_tool.rs"
+symbol = "SPAWN_AGENT_INHERITED_MODEL_GUIDANCE"
+category = "tool"
+filename = "tool-spawn-agent-inherited-model-guidance"
+description = "Guidance attached to spawn_agent's `model` parameter — inheritance default rule."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_const_str"
+file = "tools/src/agent_tool.rs"
+symbol = "SPAWN_AGENT_MODEL_OVERRIDE_DESCRIPTION"
+category = "tool"
+filename = "tool-spawn-agent-model-override-description"
+description = "Description for spawn_agent's optional `model` override parameter."
+reviewed_at = "ebdf3a878c"
+
+# ============ guardian — function-returning-static-str ============
+
+[[entry]]
+kind = "rust_fn_static_str"
+file = "core/src/guardian/prompt.rs"
+symbol = "guardian_output_contract_prompt"
+category = "mode"
+filename = "mode-guardian-output-contract"
+description = "Guardian output JSON-schema contract appended to the policy prompt at runtime (defines outcome/risk_level/user_authorization fields)."
+reviewed_at = "ebdf3a878c"
+
+# ============ agent/role.rs — inline role descriptions ============
+
+[[entry]]
+kind = "rust_inline_at_marker"
+file = "core/src/agent/role.rs"
+marker = '"explorer".to_string(),'
+category = "agent"
+filename = "agent-role-explorer"
+description = "Explorer role description — inline string in role.rs DEFAULT_ROLE_CONFIG table."
+reviewed_at = "ebdf3a878c"
+
+[[entry]]
+kind = "rust_inline_at_marker"
+file = "core/src/agent/role.rs"
+marker = '"worker".to_string(),'
+category = "agent"
+filename = "agent-role-worker"
+description = "Worker role description — inline string in role.rs DEFAULT_ROLE_CONFIG table."
+reviewed_at = "ebdf3a878c"

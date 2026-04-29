@@ -30,7 +30,7 @@ from pathlib import Path
 
 import yaml
 
-from . import pass1_autoinclude, pass1_models, pass2_denylist
+from . import pass1_5_allowlist, pass1_autoinclude, pass1_models, pass2_denylist
 from .tokens import count_o200k_base
 
 # Map snapshot placeholder name → expected corpus presence.
@@ -95,6 +95,7 @@ class VerifyReport:
     models_count: int = 0
     models_missing: list[str] = field(default_factory=list)
     allowlist_count: int = 0
+    allowlist_missing: list[tuple[str, str]] = field(default_factory=list)  # (symbol_or_marker, expected_path)
 
     # Token drift
     token_check_count: int = 0
@@ -111,6 +112,7 @@ class VerifyReport:
             or self.placeholders_static_missing
             or self.autoinclude_missing
             or self.models_missing
+            or self.allowlist_missing
             or self.token_drift
             or self.frontmatter_invalid
         )
@@ -244,10 +246,18 @@ def verify(codex_root: Path, out_root: Path, extractor_dir: Path) -> VerifyRepor
         if not expected_file.exists():
             report.models_missing.append(me.slug)
 
-    # Allow-list (M3 stub: empty)
-    import tomllib
-    with open(extractor_dir / "allow_list.toml", "rb") as f:
-        report.allowlist_count = len(tomllib.load(f).get("entry", []))
+    # Allow-list — per-entry completeness (M5a)
+    allow_entries = pass1_5_allowlist.load(extractor_dir)
+    report.allowlist_count = len(allow_entries)
+    for entry in allow_entries:
+        category = entry.get("category", "")
+        filename = entry.get("filename", "")
+        expected_path = out_root / "prompts" / category / f"{filename}.md"
+        if not expected_path.exists():
+            ident = entry.get("symbol") or entry.get("marker") or "?"
+            report.allowlist_missing.append(
+                (ident, str(expected_path.relative_to(out_root)))
+            )
 
     # ============ Token-drift check ============
     for md in (out_root / "prompts").rglob("*.md"):
