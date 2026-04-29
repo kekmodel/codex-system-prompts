@@ -52,12 +52,13 @@ PLACEHOLDER_MAP: dict[str, str] = {
     "COMPACTION_SUMMARY": "runtime_generated",
     "image": "runtime_content",
     "input_image": "runtime_content",
-    # Programmatic — deferred to M5
-    "ENVIRONMENT_CONTEXT": "deferred_m5",
-    "personality_spec": "deferred_m5",
-    "model_switch": "deferred_m5",
-    "realtime_conversation": "deferred_m5",
-    "collaboration_mode": "deferred_m5",
+    # Captured at M5b via Pass 1.6 ContextualUserFragment auto-discovery.
+    # Each placeholder ↔ a context-fragment file derived from the impl block's struct name.
+    "ENVIRONMENT_CONTEXT": "prompts/context-fragment/context-fragment-environment-context.md",
+    "personality_spec": "prompts/context-fragment/context-fragment-personality-spec-instructions.md",
+    "model_switch": "prompts/context-fragment/context-fragment-model-switch-instructions.md",
+    "realtime_conversation": "prompts/context-fragment/context-fragment-realtime-start-instructions.md",
+    "collaboration_mode": "prompts/context-fragment/context-fragment-collaboration-mode-instructions.md",
 }
 
 # Matches angle-bracket placeholders. Captures placeholder name (before `:`).

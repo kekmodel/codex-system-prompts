@@ -9,6 +9,7 @@ from .categorizer import categorize
 from .frontmatter import render as render_frontmatter
 from .pass1_5_allowlist import AllowListCapture
 from .pass1_autoinclude import Candidate
+from .pass1_fragments import FragmentCapture
 from .pass1_models import ModelEntry
 from .tokens import count_o200k_base
 
@@ -18,6 +19,7 @@ class EmitResult:
     written: list[Path]            # paths written (relative to mirror repo)
     orphans: list[Candidate]       # candidates with no matching category rule
     allowlist_written: int = 0     # count of allow-list captures emitted
+    fragment_written: int = 0      # count of ContextualUserFragment captures emitted
 
 
 def _kind_label(file_path: Path) -> str:
@@ -44,10 +46,21 @@ def _description(target_rel: Path, category: str) -> str:
     )
 
 
+def _struct_to_filename(name: str) -> str:
+    """CamelCase struct name → kebab-case filename stem."""
+    out = []
+    for i, ch in enumerate(name):
+        if ch.isupper() and i > 0 and not name[i - 1].isupper():
+            out.append("-")
+        out.append(ch.lower())
+    return "".join(out)
+
+
 def emit(
     candidates: list[Candidate],
     model_entries: list[ModelEntry],
     allowlist_captures: list[AllowListCapture],
+    fragment_captures: list[FragmentCapture],
     out_root: Path,
     codex_version: str,
     codex_commit: str,
@@ -168,4 +181,77 @@ def emit(
         written.append(out_path.relative_to(out_root))
         allowlist_written += 1
 
-    return EmitResult(written=written, orphans=orphans, allowlist_written=allowlist_written)
+    # ========== ContextualUserFragment captures (Pass 1.6 — M5b) ==========
+    fragment_written = 0
+    for fc in fragment_captures:
+        kebab = _struct_to_filename(fc.struct_name)
+        filename = f"context-fragment-{kebab}"
+
+        # Compose body of the .md file:
+        #   • If we extracted a clean template: show START_MARKER + template + END_MARKER
+        #   • Else: show START_MARKER + Rust code block of body() + END_MARKER
+        if fc.body_template is not None:
+            md_body = (
+                f"{fc.start_marker}{fc.body_template}{fc.end_marker}\n"
+                if not fc.start_marker and not fc.end_marker
+                else f"{fc.start_marker}\n{fc.body_template}\n{fc.end_marker}\n"
+            )
+            kind_suffix = "template"
+        else:
+            block = (
+                "```rust\nfn body(&self) -> String {\n"
+                + fc.body_source
+                + "\n}\n```\n"
+            )
+            wrapped = (
+                f"{block}\n"
+                if not fc.start_marker and not fc.end_marker
+                else f"{fc.start_marker}\n\n{block}\n{fc.end_marker}\n"
+            )
+            md_body = wrapped
+            kind_suffix = "function-body-source"
+
+        token_count = count_o200k_base(md_body)
+        callsite = f"{fc.source_rel}:{fc.source_line}"
+
+        extra: dict = {
+            "source": {
+                "struct": fc.struct_name,
+                "role": fc.role,
+                "start_marker": fc.start_marker,
+                "end_marker": fc.end_marker,
+                "body_extraction": kind_suffix,
+            }
+        }
+
+        fm = render_frontmatter(
+            name=f"Context fragment: {fc.struct_name}",
+            category="context-fragment",
+            codex_version=codex_version,
+            codex_commit=codex_commit,
+            source_path=Path("codex-rs") / fc.source_rel,
+            source_kind="rust_contextual_user_fragment",
+            callsite=callsite,
+            extraction_pass=1.6,
+            extraction_method="rust_contextual_user_fragment",
+            tokens_o200k_base=token_count,
+            description=(
+                f"`{fc.struct_name}` ContextualUserFragment from "
+                f"`codex-rs/{fc.source_rel}`. Role: {fc.role!r}. "
+                f"Markers: {fc.start_marker!r} … {fc.end_marker!r}. "
+                f"body() captured as {kind_suffix}."
+            ),
+            extra=extra,
+        )
+        out_path = out_root / "prompts" / "context-fragment" / f"{filename}.md"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(fm + md_body)
+        written.append(out_path.relative_to(out_root))
+        fragment_written += 1
+
+    return EmitResult(
+        written=written,
+        orphans=orphans,
+        allowlist_written=allowlist_written,
+        fragment_written=fragment_written,
+    )
