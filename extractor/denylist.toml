@@ -4,9 +4,11 @@
 # See /SPEC.md §2.1 (C).
 
 [paths]
-# Glob patterns (relative to codex-rs/) that auto-exclude.
+# Glob patterns (relative to codex-rs/) that auto-exclude. Two roles:
+#   (a) Pass 2 — drop include_str! candidates pointing at non-prompt content
+#   (b) Pass 3 (orphan audit) — skip prompt-shaped files that aren't prompts
 exclude = [
-    # Test/bench/example trees
+    # ===== Test/bench/example trees =====
     "tests/**",
     "benches/**",
     "examples/**",
@@ -15,7 +17,8 @@ exclude = [
     "**/*_test.rs",
     "third_party/**",
     "patches/**",
-    # Non-prompt embedded content (verified at rust-v0.126.0-alpha.12 dev iteration):
+
+    # ===== Non-prompt embedded content (Pass 2) =====
     "**/hooks/schema/**",                     # JSON hook input/output schemas
     "**/login/**/assets/**",                  # login HTML/CSS
     "**/sandboxing/**/*.sbpl",                # Seatbelt sandbox policy
@@ -23,6 +26,26 @@ exclude = [
     "**/tui/**/tooltips.txt",                 # TUI UI text (per SPEC §1.2)
     "**/execpolicy*/**/*.policy",             # execpolicy legacy data
     "**/models-manager/models.json",          # handled by fan-out (§2.4), not auto-include
+
+    # ===== Non-prompt prompt-shaped files (Pass 3 orphan audit) =====
+    "**/tui/frames/**",                       # ASCII-art animation frames (~324 files)
+    "**/vendor/**",                           # vendored upstream code (bubblewrap, etc.)
+    "**/.cargo/**",                           # cargo audit/config (lint, not prompt)
+    "**/.config/**",                          # nextest etc. build config
+    "clippy.toml",                            # lint config
+    "rustfmt.toml",                           # formatter config
+    "deny.toml",                              # cargo-deny lint config
+    "**/docs/**",                             # internal architecture docs
+    "**/skills/src/assets/samples/**",        # sample skills (per SPEC §10.4 logic)
+    "config.md",                              # codex-rs root config doc
+    "core/src/config/schema.md",              # config schema doc (not a prompt)
+    "**/CODE-OF-CONDUCT.md",
+    "**/SECURITY.md",
+    "**/NEWS.md",
+    "**/release-checklist.md",
+    "**/meson-options.md",
+    "**/bwrap.md",
+    "**/tui/styles.md",                       # TUI styling guide, not prompt
 ]
 
 [symbols]

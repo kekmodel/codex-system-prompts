@@ -40,10 +40,13 @@ def extract(codex_root: str, tag: str | None, out: str, mode: str) -> None:
     table.add_column("Count", justify="right", style="green")
     table.add_row("Pass 1: include_str! candidates", str(report.pass1_count))
     table.add_row("Pass 1: models.json fan-out entries", str(report.pass1_models_count))
+    table.add_row("Pass 1.5: allow-list entries (M5 resolves)", str(report.pass1_5_allowlist_entries))
     table.add_row("Pass 2: kept after denylist", str(report.pass2_kept))
     table.add_row("Pass 2: dropped by denylist", str(report.pass2_dropped))
-    table.add_row("Pass 3: files written", str(report.pass3_written))
-    table.add_row("Pass 3: orphans (uncategorized)", str(report.pass3_orphans))
+    table.add_row("Pass 3: files written (captured)", str(report.pass3_written))
+    table.add_row("Pass 3: uncategorized (rule miss)", str(report.pass3_uncategorized))
+    table.add_row("Pass 3 (orphan audit): files written", str(report.orphan_written))
+    table.add_row("Pass 3 (orphan audit): empty skipped", str(report.orphan_skipped_empty))
     console.print(table)
 
 

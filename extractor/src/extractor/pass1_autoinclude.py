@@ -39,16 +39,39 @@ def _is_test_path(rel: Path) -> bool:
     return False
 
 
+_ITEM_RX = re.compile(
+    r"^\s*(pub\s*(\([^)]*\)\s*)?)?(use|fn|struct|impl|trait|mod|enum|const|static|type|extern)\s"
+)
+
+
 def _is_test_block(lines: list[str], line_idx: int, lookback: int = 60) -> bool:
-    """Cheap heuristic: walk backwards looking for #[cfg(test)] before an item boundary."""
+    """Heuristic: is the line at line_idx attached to a #[cfg(test)] attribute?
+
+    A `#[cfg(test)]` attribute applies ONLY to the next item declaration. Walking
+    backwards from line_idx, we collect contiguous attribute / comment / blank
+    lines. The first non-attribute item line we hit *consumes* any earlier
+    attributes — they don't apply to us. So we only return True if a cfg(test)
+    is in the contiguous attribute prefix of our own item.
+
+    NOTE: this misses enclosing `#[cfg(test)] mod tests { ... }` blocks. In
+    practice, codex test fixtures using include_str! live under `tests/` paths
+    which we already deny via `_is_test_path` / denylist. M5 may refine.
+    """
     start = max(0, line_idx - lookback)
-    for i in range(line_idx, start - 1, -1):
-        line = lines[i].strip()
-        if TEST_CFG_RX.search(line):
-            return True
-        # Stop scanning at a top-level item declaration (rough heuristic).
-        if i < line_idx and re.match(r"^\s*(pub\s+)?(fn|struct|impl|trait|mod|enum)\s+\w", line):
-            break
+    for i in range(line_idx - 1, start - 1, -1):
+        raw = lines[i]
+        line = raw.strip()
+        if not line or line.startswith("//") or line.startswith("/*"):
+            continue
+        if line.startswith("#["):
+            if TEST_CFG_RX.search(line):
+                return True
+            continue  # other attribute; keep walking
+        # Non-attribute, non-comment, non-blank line.
+        # If it's an item declaration, the attributes above it are NOT ours.
+        if _ITEM_RX.match(raw):
+            return False
+        # Otherwise (e.g. inside a function body), keep walking.
     return False
 
 
