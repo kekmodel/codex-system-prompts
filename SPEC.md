@@ -1,0 +1,633 @@
+# codex-system-prompts — SPEC v0.3
+
+> Status: **Tier 1 + Tier 2 review findings applied (M1 ready)**.
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29).
+> Codex baseline anchor: **latest upstream tag** (currently `rust-v0.126.0-alpha.12`, commit `921a304c36`).
+> Mirror philosophy: Piebald's `claude-code-system-prompts` (single tree at latest + git tags + frontmatter + CHANGELOG.md), adapted to Codex's hybrid architecture.
+
+### Change log (v0.2 → v0.3) — applies SPEC_REVIEW_v0.2.md Tier 1 + Tier 2
+
+- **T1.1 (§2.3 rewrite)**: codex-core linking changed from "thin Rust harness" hand-wave to a concrete **hybrid plan** — in-workspace shim crate (added to codex-rs workspace at extract time) + snapshot harvest. Explicit shim function list included.
+- **T1.2 (§2.1 rewrite)**: dropped unverifiable "static call-graph reachability" claim. Replaced with **enumerated allow-list + mechanical auto-include + denylist**. Spec is honest: we maintain a curated list, not a call-graph.
+- **T1.3 (§2.5 new)**: split verification into **two layers**: (A) snapshot trace-back as accuracy lower bound (not a completeness proof), (B) allow-list completeness as porting check. README reports both.
+- **T2.1 (§2.2 fix)**: removed arbitrary 80-char inline-string threshold. Inline strings now extracted only via allow-list.
+- **T2.2 (§1.1, §2.1.1 add)**: declared **default-features baseline**. Feature-gated prompts (e.g., `child_agents_md`) under `prompts/feature-gated/<flag>/...`.
+- **T2.3 (§7, §3.4 fix)**: token-count framing — `tokens.template_o200k_base` for templates, `tokens.rendered_o200k_base` for default renderings. README disclaimer added.
+- **T2.4 (§3.5, §6.1, §13.3 fix)**: resolved tag-skip vs 1:1 mapping contradiction. Decision: **selective tag** (only material changes get a mirror tag), with full upstream tag log in `data/upstream-tags.md`.
+- **T2.5 (§8.2 fix)**: dry-run output for manual Claude-driven mode is paginated/summarized to fit the conversation context window.
+
+### Change log (v0.1 → v0.2)
+- §10 reformulated as **Resolved decisions** (was: open questions). All 10 items locked.
+- §6 versioning: clarified "latest tag" baseline rule (NOT `main`), defined alpha vs stable handling.
+- §8 automation: added dual-mode support (Claude-driven manual + GH Action automation), both bound to the same deterministic extractor invocation.
+- §3.5 CHANGELOG: aligned with Piebald format (per-tag entry with `_+/-N tokens_` line, `**NEW:**` / `**REMOVED:**` markers).
+- New §13 "Versioning & re-extraction policy" — dedicated section per user request.
+
+---
+
+## 0. Mission
+
+Provide an extracted, version-tracked, fragment-level mirror of every prompt string that the Codex CLI ships and uses at runtime — with token counts, semantic categorization, and a per-version changelog — to enable understanding, customization, and historical analysis.
+
+**Non-goal:** copy Piebald's grain 1:1. Codex's prompt architecture is fundamentally different (hybrid monolith+fragments+programmatic) and forcing Claude Code's 110-piece taxonomy onto it produces misleading bins. We mirror Codex's *philosophy* (extracted, complete, versioned, machine-checkable), not its *layout*.
+
+---
+
+## 1. Scope
+
+### 1.1 In scope (MUST capture)
+
+A prompt is in scope iff it is **reachable from a normal Codex session** (see §2.1 reachability rule). Specifically:
+
+- **Per-model `base_instructions`** and `model_messages.instructions_template` from `codex-rs/models-manager/models.json` (~13 model slugs + fallback).
+- **Markdown templates loaded via `include_str!`**: `review_prompt.md`, `apply_patch_tool_instructions.md`, `templates/compact/*.md`, `templates/realtime/*.md`, `templates/goals/*.md`, `core/src/context/prompts/permissions/**/*.md`, `core/src/context/prompts/realtime/*.md`, `memories/{read,write}/templates/**/*.md`, `tui/prompt_for_init_command.md`, `core/hierarchical_agents_message.md`, `core/src/guardian/policy*.md`.
+- **Inline raw-string prompts** (`r#"..."#`) reachable at runtime: `agent/role.rs` (worker/explorer/awaiter role descriptions), `guardian/prompt.rs::guardian_output_contract_prompt`, `code-mode/src/description.rs` constants (`EXEC_DESCRIPTION_TEMPLATE`, `WAIT_DESCRIPTION_TEMPLATE`, `MCP_TYPESCRIPT_PREAMBLE`, `CODE_MODE_ONLY_PREFACE`, `DEFERRED_NESTED_TOOLS_GUIDANCE`), `tools/src/apply_patch_tool.rs::APPLY_PATCH_JSON_TOOL_DESCRIPTION`, `tools/src/agent_tool.rs::SPAWN_AGENT_MODEL_OVERRIDE_DESCRIPTION`.
+- **Programmatic tool descriptions** built via `format!`/`writeln!` in `tools/src/{tool_discovery,local_tool,request_user_input_tool,goal_tool,plan_tool}.rs` and `core/src/agent/role.rs::spawn_tool_spec::build`. Captured as **template + default rendering** (§2.3).
+- **TOML-defined built-in agents**: `core/src/agent/builtins/{explorer,awaiter}.toml` — extract `developer_instructions` field.
+- **ContextualUserFragment wrappers**: ~25 impls in `core/src/context/*.rs`. Capture START/END markers + body-builder template.
+- **Collaboration mode templates**: `collaboration-mode-templates/templates/{default,execute,plan,pair_programming}.md`.
+- **MCP-related**: `core/src/consequential_tool_message_templates.json` and approval option labels in `core/src/mcp_tool_call.rs:823-848`.
+- **Static reference data embedded in binary**: `agent_names.txt`, `apply_patch.lark` grammar, `announcement_tip.toml`.
+- **Personality fragments** as used by `models-manager/src/model_info.rs:17-21` (`DEFAULT_PERSONALITY_HEADER`, `LOCAL_FRIENDLY_TEMPLATE`, `LOCAL_PRAGMATIC_TEMPLATE`).
+
+**Feature-flag baseline (v0.3)**: the canonical corpus is built against **`cargo build` with default features** at the upstream tag. Non-default feature-gated prompts (e.g., behind `#[cfg(feature = "child_agents_md")]`) are captured in a parallel tree under `prompts/feature-gated/<feature-name>/...` and never mixed into the default tree. See §2.1.1.
+
+### 1.2 Out of scope
+
+| Item | Reason |
+|---|---|
+| TUI strings shown to user but never sent to model | UI surface, not a prompt. |
+| `.codex/skills/` (project-local skills for the Codex repo itself) | Not shipped in the binary; repo-internal tooling. *(see §10.4)* |
+| `codex-cli/`, `sdk/typescript/`, `sdk/python/` source | Thin launchers/SDKs; carry no prompts (recon confirmed). |
+| `docs/*` (mostly redirect stubs to developers.openai.com) | Not embedded in binary. |
+| `patches/`, `third_party/` | Vendored upstream code, separate license. |
+| `*.snap` files in `tests/` | Used as **verification oracle** (§2.4), not mirrored as content. |
+| Test-only constants (`#[cfg(test)]`-gated) | Not reachable at runtime. |
+| Login/auth HTML rendered via `codex_utils_template` | User-facing, not a model prompt. |
+
+### 1.3 Boundary cases — explicit per-item decisions
+
+| Item | Decision | Rationale |
+|---|---|---|
+| `announcement_tip.toml` | **Include** under `data-` prefix | Compile-time embedded; surfaces in TUI text. |
+| `AGENTS.md` (root) | **Exclude as a prompt**, mention in README | Config Codex *consumes* in this repo, not what Codex *ships*. |
+| Orphan `*_prompt.md` (e.g. `gpt_5_codex_prompt.md`, `core/templates/agents/orchestrator.md`, `core/templates/collab/experimental_prompt.md`, `core/templates/personalities/*`, `core/templates/search_tool/*`) | **Catalog under `orphan/` subtree** with explicit "not currently shipped" frontmatter | Preserve as historical artifacts; clearly labeled. |
+| MCP approval option labels | **Include** under `tool-` prefix | Sent in tool-output messages → reach the model. |
+| `consequential_tool_message_templates.json` | **Include** under `tool-` prefix | Templated message strings consumed by Codex runtime. |
+| `core/prompt_with_apply_patch_instructions.md` | **Treat as orphan** | Referenced only from `core/src/session/tests.rs:1073` — historical fixture. |
+
+---
+
+## 2. Extraction strategy
+
+### 2.1 Inclusion rule (allow-list + auto-include + denylist)
+
+> **v0.3 amendment (T1.2)**: v0.2's "reachability" rule implied static call-graph analysis, which Rust's macros + traits + async make impractical. v0.3 replaces it with **enumerated allow-list + mechanical auto-include + denylist**. We are not doing call-graph analysis; we maintain a curated list with mechanical filters.
+
+A prompt source is **in scope** iff one of:
+
+**(A) Auto-include** (mechanical, no curation):
+- The file is `include_str!`'d / `include_bytes!`'d from a `.rs` file under the shipping crate set (resolved via `cargo metadata` from `codex-rs/`).
+- That `.rs` file is not under `tests/`, `benches/`, `examples/`, and not inside a `#[cfg(test)]` block.
+- That `.rs` file is not behind a non-default `#[cfg(feature = "...")]` gate (default-features baseline; see §2.1.1).
+
+**(B) Allow-list** (curated, version-controlled in `extractor/allow_list.toml`):
+- The symbol (function or constant) is listed by `file:line:symbol` triple.
+- Captures inline `r#"..."#` constants, programmatic-prompt builder functions (see §2.3), and any prompt-bearing source we cannot detect mechanically.
+- Each entry has a 1-line rationale and a `reviewed_at` codex commit SHA.
+
+**(C) Denylist** (overrides A and B; in `extractor/denylist.toml`):
+- Default content: `tests/`, `benches/`, `examples/`, `*_tests.rs`, plus any explicit non-prompt path.
+
+The allow-list is the **source of truth** for non-mechanical prompts. Static call-graph analysis is **explicitly not used**. Allow-list maintenance is part of every codex-tag re-extraction cycle (Pass 1.5 below).
+
+#### 2.1.1 Feature-flag baseline (T2.2)
+
+- Mirror baseline: `cargo build` with **default features** at the upstream tag.
+- Default-feature output → `prompts/<category>/...`.
+- Non-default feature-gated content → `prompts/feature-gated/<feature-name>/...`. Each file's frontmatter records `source.feature_gates: [<feature-name>, ...]`.
+- A separate `--all-features` audit run produces only the gated subset; the default tree is never polluted.
+
+### 2.2 Extractor pipeline
+
+Implemented in `extractor/` (Mixed Python orchestrator + Rust shim per §10.7).
+
+| Pass | Purpose | Output |
+|---|---|---|
+| **1. Auto-include enumeration** | Walk shipping `.rs` files for `include_str!`/`include_bytes!`/JSON-loaded `models.json` references. **No string-size threshold** (v0.3: removed arbitrary 80-char rule, T2.1). | Auto-include candidate list. |
+| **1.5 Allow-list resolution** | Load `extractor/allow_list.toml`. For each entry, locate the symbol in source and capture content (inline string for constants; shim invocation for programmatic builders, see §2.3). | Allow-list candidate list. |
+| **2. Denylist filter** | Apply `extractor/denylist.toml`. Drop matches. | Filtered candidate list. |
+| **3. Categorize & emit** | Map each kept prompt to a Codex-native category (§4). Render frontmatter + body. Write to category folder. | `prompts/**/*.md`. |
+| **4. Verification** | Run §2.5 two-layer verification (accuracy + completeness). | CI report. |
+| **5. Index generation** | Regenerate `README.md` index with token counts + descriptions. Regenerate `CHANGELOG.md` entry by diffing previous mirror tag's snapshot. | `README.md`, `CHANGELOG.md` patch. |
+
+### 2.3 Programmatic prompts — hybrid in-workspace shim + snapshot harvest
+
+> **v0.3 amendment (T1.1)**: v0.2 said "build a thin Rust harness that links against codex-core." This was hand-waved — codex-core is workspace-internal with unstable API and runtime dependencies. v0.3 specifies a concrete **hybrid** approach.
+
+For programmatic prompts (those built via `format!`/`writeln!` chains, e.g., ContextualUserFragment `body()` methods, `tools/src/*.rs::create_*_spec`, `core::agent::role::spawn_tool_spec::build`, `code-mode::description::*`):
+
+#### 2.3.1 Path 1 — In-workspace shim crate
+
+At extract time, the extractor performs a **patch-and-build** sequence:
+
+1. Clone codex at the target tag (or use existing checkout).
+2. Add a workspace member at `codex-rs/extract-prompts-shim/` (path injected by extractor; never committed upstream).
+3. The shim's `main.rs` imports the prompt-builder symbols from `codex-core`, `codex-tools`, `codex-code-mode`, `codex-core-skills`, etc., invokes each with a **synthetic default context** (§2.3.3), and serializes output as JSON to `extract-prompts-shim/output/`.
+4. Build with `cargo run -p codex-prompt-extract-shim --release`.
+5. Python orchestrator consumes the JSON corpus.
+6. After extraction, the workspace patch is reverted; codex tree returns to clean state.
+
+**Explicit shim function list** (must be invoked by the shim, by category):
+
+- `core::context::*` — every `ContextualUserFragment::body()` impl (~25 fragments). Synthetic context provides cwd, env, agents_md, model, sandbox state.
+- `tools::tool_discovery::create_tool_search_spec`, `create_tool_suggest_spec`.
+- `tools::local_tool::create_local_shell_spec`.
+- `tools::request_user_input_tool::create_*_spec` (all variants).
+- `tools::goal_tool::create_*`.
+- `tools::plan_tool::create_*`.
+- `core::agent::role::spawn_tool_spec::build`.
+- `core::agent::role::*` — worker, explorer, awaiter inline role descriptions.
+- `core::guardian::prompt::guardian_output_contract_prompt`.
+- `code-mode::description::EXEC_DESCRIPTION_TEMPLATE` and siblings.
+
+This list is the authoritative seed for `extractor/allow_list.toml`.
+
+#### 2.3.2 Path 2 — Snapshot harvest (fallback)
+
+For prompts the shim cannot easily render (full async session with tokio runtime, inputs the shim cannot synthesize cleanly), use snapshot files at `core/tests/suite/snapshots/model_visible_layout__*.snap` as the rendered-prompt source.
+
+Allow-list entries that route to Path 2 carry `extraction.method: snapshot_harvest` with `source.snapshot: <path-to-snap-file>` in frontmatter.
+
+#### 2.3.3 Synthetic default context (Path 1)
+
+The shim's invocation context is fixed and version-controlled:
+
+```rust
+SyntheticContext {
+    cwd: "/codex/working/dir",
+    model: "gpt-5.2-codex",
+    sandbox_mode: SandboxMode::ReadOnly,
+    approval_policy: ApprovalPolicy::OnRequest,
+    agents_md: None,
+    mcp_servers: Vec::new(),
+    personality: Personality::None,
+    reasoning_effort: ReasoningEffort::Medium,
+    skills_loaded: Vec::new(),
+    memories: Vec::new(),
+    plan: None,
+    git_branch: None,
+    user_shell: "/bin/zsh",
+    is_windows: false,
+}
+```
+
+This context is recorded **verbatim** in each `*-default.md`'s `render_context:` frontmatter so readers can interpret the rendered output correctly.
+
+### 2.4 Models.json fan-out
+
+`codex-rs/models-manager/models.json` is the canonical home for per-model `base_instructions`. Fan out into separate files:
+
+- `base-instructions-<model-slug>.md` — one per model entry. Slug normalized (e.g., `gpt-5.2-codex`, `o3-codex`).
+- Frontmatter records the original JSON pointer (`source.json_pointer: "/gpt-5.2-codex/base_instructions"`).
+- A single `data-models-manifest.md` records the slug → file mapping for programmatic consumers.
+
+### 2.5 Verification — two layers (T1.3)
+
+> **v0.3 amendment**: v0.2 implied "100% snapshot trace-back ⇒ complete capture". This is wrong — snapshots only cover prompts that some test exercises. v0.3 separates verification into accuracy and completeness.
+
+#### Layer A — Accuracy (snapshot trace-back, lower bound)
+
+For every snapshot at `core/tests/suite/snapshots/model_visible_layout__*.snap` and `core/src/guardian/snapshots/*.snap` (downloaded from upstream at the recorded tag):
+
+- Every line must trace back to a captured prompt fragment OR be a documented runtime-injected variable (cwd, current time, git branch, etc.).
+- Lines that cannot be attributed are spec bugs (logged + CI-blocking).
+
+**Proves**: when a captured prompt is exercised by tests, our extraction matches shipping behavior.
+
+**Does NOT prove**: that all shipping prompts are captured. A prompt never exercised in any snapshot is invisible to this layer.
+
+#### Layer B — Completeness (allow-list + auto-include inventory)
+
+- Every entry in `extractor/allow_list.toml` must produce ≥1 captured file.
+- Every `.md`/`.lark`/`.toml`/`.txt` matched by Pass 1 auto-include must produce a captured file (or be deny-listed with rationale).
+- Every per-model entry in `models.json` must produce a `base-instructions-<slug>.md`.
+
+**Proves**: nothing is dropped between source enumeration and corpus emission.
+
+**Does NOT prove**: that the allow-list itself is complete. Allow-list completeness is bounded by human curation; new codex prompts added without an allow-list update are missed by both layers — flagged as a maintenance task at every re-extraction.
+
+#### Coverage reporting
+
+README's "Coverage" section reports both metrics, labeled clearly:
+
+- **Accuracy**: `N% of snapshot lines traced` (target 100%; CI fails below).
+- **Completeness**: `M% of allow-list + auto-include entries captured` (target 100%; CI fails below).
+
+Neither is a "completeness of capture" guarantee. README explicitly warns about Layer A's limitation.
+
+---
+
+## 3. Repository layout
+
+```
+codex-system-prompts/
+├── README.md                  # Auto-generated index (§3.4)
+├── CHANGELOG.md               # Per-tag prompt diffs (§3.5)
+├── LICENSE                    # Apache-2.0 (mirrors upstream)
+├── NOTICE                     # Reproduces upstream NOTICE per §9
+├── DISCLAIMER.md              # Unofficial-mirror notice (§9)
+├── SPEC.md                    # This file (versioned with the repo)
+├── prompts/
+│   ├── base-instructions/     # Per-model + fallback base_instructions
+│   ├── mode/                  # review, compact, realtime, collab, guardian
+│   ├── permission/            # 5 approval_policy + 3 sandbox_mode
+│   ├── context-fragment/      # ContextualUserFragment wrappers
+│   ├── tool/                  # Tool descriptions (static + programmatic pairs)
+│   ├── agent/                 # Built-in agent roles + agent_names list
+│   ├── memory/                # /memories skill prompts
+│   ├── code-mode/             # code-mode exec/wait + JS API descriptions
+│   ├── tui/                   # TUI-injected prompts (e.g., /init)
+│   ├── personality/           # personality template fragments
+│   ├── data/                  # Static refs (models manifest, announcement_tip, lark grammar)
+│   └── orphan/                # Historical / unreachable .md files (clearly labeled)
+├── extractor/                 # Extraction tooling (§2.2, §10.7)
+└── tests/
+    └── snapshot-cross-check/  # Verifies capture against codex insta snapshots
+```
+
+### 3.2 File naming convention
+
+`<category-prefix>-<descriptive-kebab-name>.md`
+
+Prefixes (final list — no further additions without spec amendment):
+
+`base-instructions-` · `mode-` · `permission-approval-` · `permission-sandbox-` · `context-fragment-` · `tool-` (with `-template`/`-default` suffixes for programmatic) · `agent-role-` · `agent-builtin-` · `memory-` · `code-mode-` · `tui-` · `personality-` · `data-` · `orphan-`
+
+### 3.3 Frontmatter schema
+
+YAML frontmatter (deviates from Piebald's HTML-comment + `ccVersion` for tooling-friendliness; YAML is parseable by every common toolchain):
+
+```yaml
+---
+name: "Tool: apply_patch — instructions"
+category: tool
+codex_version: rust-v0.126.0-alpha.12
+codex_commit: 921a304c36
+source:
+  path: codex-rs/apply-patch/apply_patch_tool_instructions.md
+  kind: include_str               # include_str | inline_raw_string | json_field | toml_field | format_template
+  reached_from:
+    - apply-patch/src/lib.rs:33
+extraction:
+  pass: 1
+  method: file                    # file | inline | format
+variables: []                     # see §5
+tokens:
+  o200k_base: 1234
+description: >
+  Instructions for the apply_patch tool, included verbatim by the apply-patch
+  crate. Documents the patch envelope syntax and update/add/delete semantics.
+---
+
+<prompt body verbatim, placeholders preserved>
+```
+
+For `extraction.method: format`, an additional `render_context:` block records the synthetic default context used to produce the `*-default.md` sibling.
+
+### 3.4 README structure
+
+Mirrors Piebald's index style but Codex-categorized:
+
+1. Header: repo purpose + current Codex tag + Apache-2.0 disclaimer.
+2. "What lives here" — pointer to SPEC.md.
+3. **"Coverage"** (v0.3 expanded, T1.3): two metrics, labeled clearly — **Accuracy** (% of snapshot lines traced; lower-bound on extraction correctness) AND **Completeness** (% of allow-list + auto-include entries captured; porting check). Plain-language note that **neither metric proves "all shipping prompts captured"**.
+4. **Token-count framing notice** (v0.3 added, T2.3): variable-bearing prompts show *template* token counts (placeholders intact). Real session tokens can be 2–5× higher (e.g., personality slot 100+ tokens, AGENTS.md content can be thousands). For programmatic prompts, both `tokens.template_*` and `tokens.rendered_*` are shown side-by-side.
+5. Section per category (§4 list), each listing files with token count + 1-line description.
+6. Footer: link to upstream, attribution.
+
+### 3.5 CHANGELOG strategy
+
+**Format mirrors Piebald's `claude-code-system-prompts/CHANGELOG.md` exactly** — each entry is one upstream Codex tag, newest at top, with a token delta line and per-file change markers. The CHANGELOG is **the canonical history surface** of the mirror; readers should be able to scroll it like a release log.
+
+Per-entry template:
+
+```markdown
+# [rust-v0.126.0-alpha.12](https://github.com/openai/codex/releases/tag/rust-v0.126.0-alpha.12)
+
+_+783 tokens_
+
+- **NEW:** Mode: Collaboration — pair programming — `prompts/mode/mode-collab-pair-programming.md`. Adds the new pair-programming collaboration template loaded by `collaboration-mode-templates/src/lib.rs`.
+- **NEW:** Tool: spawn_agent (default) — `prompts/tool/tool-spawn-agent-default.md`. Default rendering of the dynamically built `spawn_agent` tool description.
+- Tool: apply_patch — instructions — Token delta +12. Added a clarification about envelope syntax for nested updates.
+- **MOVED:** `prompts/tool/tool-search-template.md` → `prompts/tool/tool-discovery-template.md` (upstream rename `tool_search` → `tool_discovery`).
+- **REMOVED:** `prompts/orphan/orphan-search-tool-description.md` — no longer present in upstream tree.
+```
+
+**Generation rules**:
+- Top-of-file pointer: link to GitHub release for the tag.
+- Newest entry at top, oldest at bottom.
+- Token delta line: `_+N tokens_` or `_-N tokens_` (sum across all body changes for the snapshot).
+- Marker hierarchy:
+  - `**NEW:**` — entirely new prompt file (do not use for additions inside an existing file)
+  - `**REMOVED:**` — file deleted
+  - `**MOVED:**` — file relocated (preserve token Δ if body unchanged)
+  - No prefix — modification to an existing file (always include token Δ inline)
+- Auto-generated by extractor Pass 5; human-editable for clarity but the structural format is mechanical.
+
+**Selective tag** (v0.3 — T2.4): Mirror tags are a **sparse subset** of upstream tags. Specifically:
+
+- An upstream tag with **zero captured-prompt diff** produces no mirror commit and no mirror tag — it's silent.
+- A material upstream tag produces a mirror commit + mirror tag with the same string as the upstream tag.
+- Sequences of skipped intermediate tags are folded into the next material entry. Example: if `rust-v0.126.0-alpha.13` and `.14` have no prompt change but `.15` does, the CHANGELOG entry for `.15` opens with: `Spans upstream rust-v0.126.0-alpha.13..15; no prompt change in .13/.14`.
+- The **complete** upstream → mirror mapping (including silent skips) lives in `data/upstream-tags.md` — a generated registry with one row per upstream tag and status `extracted | skipped_no_prompt_diff | skipped_other`.
+
+This resolves v0.2's contradiction between "no-prompt-diff tags skipped" and "1:1 tag mapping". The mapping is **sparse-subset**, not 1:1, and `data/upstream-tags.md` carries the lossless record.
+
+---
+
+## 4. Categorization scheme
+
+(Counts from recon as of `rust-v0.126.0-alpha.12`. Final-grade prefix list:)
+
+| Prefix | Approx count | Notes |
+|---|---|---|
+| `base-instructions-` | ~13 + 1 fallback | from models.json fan-out |
+| `mode-` | 5–7 | review (1) + compact (2) + realtime (3) + guardian (2) |
+| `permission-approval-` / `permission-sandbox-` | 8 | 5 + 3 |
+| `context-fragment-` | ~25 | one per `ContextualUserFragment` impl |
+| `tool-` | ~15 | static (4) + programmatic template+default pairs (~10) + MCP labels (1) |
+| `agent-` | 3–5 | builtins (2 TOML) + roles (4 inline) + agent_names (1) |
+| `memory-` | 4 | read_path, stage_one_system, stage_one_input, consolidation |
+| `code-mode-` | 5 | exec/wait/preface/preamble/deferred-tools |
+| `tui-` | 1+ | `/init`, growing as TUI slash commands ship |
+| `personality-` | 3 | header + friendly + pragmatic |
+| `data-` | 5+ | models manifest, announcement_tip, apply_patch.lark, agent_names.txt, consequential_tool_message_templates.json |
+| `orphan-` | ~10 | cataloged but explicitly out-of-shipping-graph |
+
+**Total estimate: ~95–110 prompt files** (significantly fewer than Claude Code's 287, but each file is on average larger and more semantically coherent).
+
+---
+
+## 5. Variable handling
+
+Codex uses three coexisting template engines (recon §3 of agent 1):
+1. `codex_utils_template::Template` — strict `{{ name }}`, no logic
+2. `str::replace` — used for `{{ personality }}` and `{tenant_policy_config}`
+3. `format!`/`writeln!` — dominant for fragments and tool descriptions
+
+Spec mandates uniform surfacing of placeholders in frontmatter:
+
+```yaml
+variables:
+  - name: personality
+    engine: replace                 # replace | template | format
+    placeholder: "{{ personality }}"
+    example: "Be friendly and pragmatic."
+  - name: cwd
+    engine: format
+    arg_index: 0
+    example: "/Users/jd/workspace"
+```
+
+- **Original placeholder syntax preserved verbatim** in body (no expansion).
+- For `format!` calls with positional `{}`, document via `engine: format` and ordered `args:` list.
+- Per-prompt `tokens.*` count uses the **template body verbatim** (placeholders intact). README explicitly notes runtime tokens differ.
+
+---
+
+## 6. Versioning anchor
+
+**Baseline rule**: the mirror is always anchored to the **latest upstream tag**, not to upstream `main`. `main` may be ahead of the latest tag with unreleased changes; we do not chase moving heads.
+
+- **Canonical anchor: upstream git tag `rust-vX.Y.Z[-alpha.N]`.** Mirror reuses the same tag string (no remap).
+- **Resolving "latest"**: extractor runs `git -C <codex-root> tag --sort=-creatordate | grep '^rust-v' | head -1`. Both alpha and stable tags qualify (alpha cadence is ~weekly; stable ~monthly).
+- **Per-crate versions ignored**: workspace inheritance ⇒ 1:1 with workspace tag.
+- **In-tree dev placeholder**: `codex-rs/Cargo.toml` ships `version = "0.0.0"`; this is rewritten only at release time, so we never read it. We always use the resolved git tag.
+- `codex_version` and `codex_commit` frontmatter on every file match the snapshot tag + SHA that produced it.
+
+### 6.1 Alpha vs stable
+
+- **Both tracked.** Alphas (`rust-v0.126.0-alpha.N`) ship roughly weekly and frequently change prompts; stables (`rust-v0.125.0`) less often. Mirroring only stables would lose meaningful diff signal.
+- **Selective tag** (v0.3 — T2.4): no-prompt-diff upstream tags are **silently skipped** at the mirror level (no commit, no mirror tag). The complete upstream tag list — including all skipped tags with status — is recorded in `data/upstream-tags.md`. See §3.5 + §13.3.
+- Pre-release alphas are **not** marked specially in CHANGELOG; treated identically to stables.
+
+### 6.2 First baseline
+
+The very first mirror snapshot (M8) anchors to the **latest tag at extraction time**, expected to be `rust-v0.126.0-alpha.12` or its successor. Earlier tags can be backfilled retroactively as a separate task; not part of the initial milestone.
+
+---
+
+## 7. Token accounting (v0.3 reframed — T2.3)
+
+- **Primary tokenizer: `tiktoken` `o200k_base`** (gpt-4o family + o-series + gpt-5.x).
+- Optional secondary `tokens.cl100k_base` for older models — disabled by default (§10.3).
+- **Frontmatter field naming**:
+  - For static prompts (no placeholders): `tokens.o200k_base: N`.
+  - For templates with placeholders intact: `tokens.template_o200k_base: N`.
+  - For default-rendered programmatic prompts: `tokens.rendered_o200k_base: N` plus a `render_context:` block echoing the synthetic context (§2.3.3).
+- **What each count means**:
+  - `template_*` is a lower bound — placeholders consume 0 tokens but real values can be hundreds (personality slot ~100 tokens, AGENTS.md ~thousands).
+  - `rendered_*` reflects one specific synthetic context; real session tokens vary with config.
+- README index displays `tokens.template_*` AND `tokens.rendered_*` side-by-side for programmatic pairs, with a prominent disclaimer (§3.4 step 4).
+- **Codex's gap from Piebald**: Piebald's `±20 tokens` claim works for Claude Code (mostly static). Codex's variable-bearing prompts can shift **2–5×** between template and runtime. README disclaimer must communicate this.
+
+---
+
+## 8. Automation
+
+The extractor must be **deterministic and spec-driven** so that re-running it on the same upstream tag produces byte-identical output. This is the contract that makes both the manual and automated paths trustworthy.
+
+### 8.1 Extractor invocation (single canonical entry point)
+
+```
+extractor extract \
+  --codex-root <path-to-codex-checkout> \
+  --tag <rust-vX.Y.Z[-alpha.N]> \   # default: resolve latest via §6
+  --out <path-to-codex-system-prompts-repo> \
+  --mode <write|dry-run>
+```
+
+Behavior:
+1. Check out codex at `--tag` (or use whatever is checked out if explicitly told to).
+2. Run all 5 extractor passes (§2.2).
+3. If snapshot verification (§2.4) fails, exit non-zero and write a diagnostic report.
+4. Otherwise, materialize updated tree under `--out`, regenerate README + CHANGELOG entry.
+5. In `--mode write`, also create a git commit and tag with the upstream tag string. In `--mode dry-run`, only write the tree and print the planned commit/tag for review.
+
+### 8.2 Manual mode (Claude-driven, v0.3 with paginated dry-run — T2.5)
+
+Triggered by a user prompt to Claude inside this repo: e.g. *"Codex 최신 버전으로 업데이트해."* Claude runs:
+
+1. `git -C <codex-root> fetch --tags`.
+2. Resolve latest `rust-v*` tag (§6).
+3. `extractor extract --mode dry-run --tag <latest>` produces:
+   - `dry-run-summary.md` — paginated/summarized output Claude reads in-context:
+     - Counts: files added, modified, removed (per category).
+     - Total token Δ.
+     - First 5 file names per change type (to confirm shape, not full diff).
+     - Layer A (accuracy) + Layer B (completeness) verification status.
+   - `dry-run-full.diff` — full diff written to disk for human local review (NOT loaded into Claude context by default).
+4. Claude presents `dry-run-summary.md`. User can request specific category diff via `extractor diff --category <name>` (Claude reads on demand).
+5. On user approval: `extractor extract --mode write --tag <latest>` → commit + (selective) tag.
+6. Optional: push and open PR / GitHub release.
+
+**Context-window safety** (T2.5): summary mode prevents blowing past Claude's context on large extractions (especially first run, where everything is "new"). For first extraction, the summary shows category counts only; per-file detail stays in `dry-run-full.diff` for local review.
+
+Step 3 (dry-run summary review) is **mandatory** — no auto-commit without human eyes. This matches *"너가 작업해서 추출되게"* — Claude orchestrates, user approves.
+
+### 8.3 Automated mode (GH Action)
+
+A scheduled GitHub Action polls `openai/codex` tags hourly. On detection of a new `rust-v*` tag:
+1. Clone codex at the tag.
+2. Run the extractor in write mode against a bot branch.
+3. Open a PR titled `Update mirror for rust-vX.Y.Z[-alpha.N]` with the auto-generated CHANGELOG entry.
+4. Snapshot verification (Pass 4) runs as a required check on the PR.
+5. A human merges (or labels for auto-merge once trust is established).
+
+Both modes produce **identical results** for a given input tag, so a manual run can replace a missed automated run without divergence.
+
+### 8.4 CI on the mirror repo itself
+
+- **Snapshot verification check**: required on every PR. Fails if any line in `core/tests/suite/snapshots/model_visible_layout__*.snap` (downloaded from upstream at the recorded tag) cannot be traced back to the captured corpus.
+- **Frontmatter schema check**: every `prompts/**/*.md` validates against the §3.3 schema.
+- **Token-count drift check**: rerun `tiktoken` on every body and verify it matches the recorded `tokens.o200k_base`. Catches accidental whitespace edits.
+
+### 8.5 Atomicity
+
+Each commit on this mirror corresponds to **exactly one upstream tag** — no partial updates, no cross-tag mixing. If extraction fails partway, the dirty tree is discarded and the operator restarts.
+
+---
+
+## 9. License & attribution
+
+- Repo licensed **Apache-2.0** (matches upstream).
+- `NOTICE` reproduces OpenAI/Codex NOTICE verbatim per Apache-2.0 §4(d).
+- `DISCLAIMER.md` states:
+  - Unofficial mirror; not authored, endorsed, or maintained by OpenAI.
+  - "Codex" / "OpenAI" are trademarks of OpenAI; usage here is nominative only.
+  - Source-of-truth is upstream `openai/codex` at the recorded tag.
+  - Mirror exists for research/reference; for actual Codex behavior consult upstream.
+- Per-file frontmatter records exact upstream source path + commit SHA.
+- Each prompt file body retained as-is from upstream (Apache-2.0 redistribution).
+
+---
+
+## 10. Resolved decisions
+
+All decisions locked as of v0.2 (2026-04-29). Implementation may proceed.
+
+| # | Decision | Resolution | Source |
+|---|---|---|---|
+| 10.1 | Output repo location | **(a) `/Users/jd/workspace/codex-system-prompts/` sibling dir**, push to GitHub at M8 | user: "동의" |
+| 10.2 | Programmatic tool descriptions | **(c) Both side-by-side; `*-default.md` is the canonical "what the model actually sees"; `*-template.md` retained as developer reference** | user: "다 잡아서 실질적으로 codex 모델에게 최종적으로 주입되는 프롬프트를 잡아내야지" |
+| 10.3 | Token counter scope | **(a) `tiktoken` `o200k_base` only** | spec recommendation accepted (user: "권장사항대로") |
+| 10.4 | `.codex/skills/` inclusion | **(a) Exclude entirely; document in README** | spec recommendation |
+| 10.5 | Per-model `base_instructions` fan-out | **(a) One file per model slug**, plus `data-models-manifest.md` index | spec recommendation |
+| 10.6 | Categorization grain | **(a) Codex-native coarse (§4) — ~100 files** | user: "권장사항대로" |
+| 10.7 | Extractor language | **(c) Mixed — Python orchestrator + small Rust helper** linked against `codex-core` for accurate `format!` rendering | user: "정확하게 제대로 좋아" |
+| 10.8 | Update cadence | **(b) GH Action polling upstream tags hourly** + (a) manual Claude-driven mode as fallback. Both share the same extractor entry. | user: "버전업이 될텐데 그때마다 spec기준으로 반복해서 너가 작업해서 추출되게" |
+| 10.9 | Pre-release alphas | **(a) Mirror every alpha tag**, but skip tags with zero prompt diff (§6.1) | user: "최신 릴리즈 버전 기준으로 baseline" |
+| 10.10 | Snapshot verification strictness | **(a) CI-blocking on any uncovered line** | spec recommendation |
+
+---
+
+## 11. Implementation roadmap (post-approval)
+
+| Milestone | Deliverable | Est. effort |
+|---|---|---|
+| **M0** | SPEC v1.0 approved (this doc) | (this turn) |
+| **M1** | Repo skeleton (LICENSE, NOTICE, DISCLAIMER, SPEC, README placeholder) | 0.5 day |
+| **M2** | Extractor Passes 1+3 covering `.md` + `models.json` + TOML | 1 day |
+| **M3** | Pass 2 reachability filter; backfill `orphan/` audit | 0.5 day |
+| **M4** | Pass 4 snapshot verification CI gate | 0.5 day |
+| **M5** | Inline-string + programmatic-prompt extraction (heaviest pass; depends on §10.2 + §10.7) | 1.5–2 days |
+| **M6** | Token counts + README/CHANGELOG generation | 0.5 day |
+| **M7** | GH Action automation (per §10.8) | 0.5 day |
+| **M8** | First public snapshot at current Codex tag → push | 0.25 day |
+
+**Total: ~5–6 days of focused work**, risk concentrated in M5.
+
+---
+
+## 13. Versioning & re-extraction policy (per user spec requirement)
+
+This section consolidates the user-mandated requirements: *"main보다는 최신 릴리즈 버전 기준으로 baseline, 앞으로 codex 버전업이 될 때마다 spec 기준으로 반복해서 추출되게, 버전별로 관리되는 구조, CHANGELOG도 Piebald처럼."*
+
+### 13.1 Baseline policy (no `main` tracking)
+
+- The mirror **never** tracks `openai/codex` `main`.
+- The mirror **always** anchors to a published git tag (alpha or stable, see §6).
+- Rationale: `main` may carry unreleased prompt edits; mirroring it would publish content the upstream project considers in-flight.
+
+### 13.2 Deterministic re-extraction
+
+- Every snapshot is produced by **the same single extractor invocation** (§8.1) against an explicit upstream tag.
+- The extractor is **byte-deterministic for a given (codex tag, extractor version)** pair.
+- This guarantees that v0.126.0-alpha.12 extracted today and re-extracted six months from now produces identical output (modulo extractor version bumps, which are themselves versioned in this repo's commit history).
+
+### 13.3 Per-version management structure (Piebald-style, v0.3 selective — T2.4)
+
+The mirror does **not** keep per-version directories. Instead:
+
+| Layer | What carries version info |
+|---|---|
+| **Working tree** | Always reflects the latest extracted tag. No `v0.125/`, `v0.126/` folders. |
+| **Git tags** (v0.3) | Mirror tags are a **sparse subset** of upstream tags — only material-diff tags get a mirror commit + tag. Each mirror tag string equals an upstream tag string. To inspect a mirrored version: `git checkout rust-v0.125.0` (only works if it was a material tag); for the full upstream record, see `data/upstream-tags.md`. |
+| **`data/upstream-tags.md`** (v0.3 new) | Generated registry: every upstream tag with status `extracted | skipped_no_prompt_diff | skipped_other`. The complete upstream → mirror mapping. |
+| **Per-file frontmatter** | `codex_version` + `codex_commit` fields record the snapshot tag + SHA. |
+| **CHANGELOG.md** | Aggregates per-mirror-tag deltas (NEW/MOVED/REMOVED/MODIFIED + token Δ), newest at top, mirroring Piebald's CHANGELOG. Skipped intermediate upstream tags noted inline (§3.5). |
+
+This matches Piebald's *"@claude-code-system-prompts 처럼"* model with one explicit refinement: Codex's alpha cadence (~weekly) means many tags have no prompt change; selective tagging keeps the mirror's git log meaningful while `data/upstream-tags.md` preserves the lossless mapping.
+
+### 13.4 Re-extraction trigger flowchart
+
+```
+upstream `openai/codex` pushes new rust-v* tag
+            ↓
+  ┌─────────────────┐         ┌────────────────────────┐
+  │ GH Action poll  │   OR    │ User asks Claude:      │
+  │ (hourly)        │         │ "최신 codex로 업데이트" │
+  └────────┬────────┘         └────────────┬───────────┘
+           │                                │
+           └───────────────┬────────────────┘
+                           ↓
+              extractor extract --mode dry-run --tag <new-tag>
+                           ↓
+              Snapshot verification (§2.4)
+                           ↓
+                    ┌──────────┐
+                    │ pass?    │
+                    └────┬─────┘
+                  fail   │   pass
+                  ↓      ↓
+              halt+   diff review
+              report   ↓
+                  user / reviewer approves
+                           ↓
+              extractor extract --mode write --tag <new-tag>
+                           ↓
+              git commit + git tag <new-tag> + push
+                           ↓
+                  CHANGELOG entry visible at HEAD
+```
+
+### 13.5 Mirror version vs. spec version
+
+- Mirror tags = upstream Codex tags (1:1).
+- The **spec itself** (this SPEC.md) is versioned independently inside this repo (v0.1, v0.2, …). When extractor logic changes, spec version bumps; the next mirror commit records `spec_version` in its commit message footer.
+- Spec v0.x can produce mirror snapshots for many Codex tags. A single Codex tag can be re-extracted under multiple spec versions; the most recent extraction wins on `main` of this repo.
+
+### 13.6 Backfill (deferred)
+
+Initial release covers only the latest tag at extraction time. Historical backfill (extracting older tags into commits with their original tag strings) is **deferred** and tracked as a post-M8 task.
+
+---
+
+## 12. Out-of-spec risks (acknowledged)
+
+- **Codex evolves fast** (alpha tag ~daily). The extractor must be resilient to file moves; we should add a `previous_path:` migration hint when files relocate upstream.
+- **Personality interpolation has two implementations** (`models-manager/src/model_info.rs` vs. `protocol/src/openai_models.rs`) — extractor must mirror both code paths or pick a canonical one and document the choice.
+- **`code-mode/src/description.rs` is 1101 lines** of programmatic assembly with embedded JSON Schemas of nested tools. M5's hardest target.
+- **Bazel + Cargo dual build**: Cargo is the source-of-truth per `AGENTS.md`. Extractor reads via Cargo only; Bazel parity not our concern.
+- **Trademark / branding**: any public release should clear the "OpenAI Codex System Prompts" naming choice with a lawyer-tier review of nominative-use safe harbor. Suggest neutral naming (e.g., `openai-codex-prompts-mirror` or `codex-prompt-archive`).

@@ -1,0 +1,22 @@
+# extractor/denylist.toml
+#
+# Paths/symbols excluded regardless of allow-list / auto-include matches.
+# See /SPEC.md §2.1 (C).
+
+[paths]
+# Glob patterns (relative to codex-rs/) that auto-exclude entire directories or files.
+exclude = [
+    "tests/**",
+    "benches/**",
+    "examples/**",
+    "**/tests/**",
+    "**/*_tests.rs",
+    "**/*_test.rs",
+    "third_party/**",
+    "patches/**",
+]
+
+[symbols]
+# Specific file:symbol entries to deny even if they're in allow_list.toml.
+# Used to override stale allow-list entries pending cleanup.
+exclude = []

@@ -1,0 +1,23 @@
+[project]
+name = "codex-prompts-extractor"
+version = "0.1.0"
+description = "Extracts and version-mirrors Codex CLI prompt strings. See /SPEC.md."
+requires-python = ">=3.12"
+dependencies = [
+    "tiktoken>=0.8",       # token counting (o200k_base)
+    "tomli>=2.0",          # TOML parsing (3.11+ has tomllib in stdlib but tomli is forward-compatible)
+    "tomli-w>=1.0",        # TOML writing (allow_list.toml maintenance)
+    "PyYAML>=6.0",         # frontmatter
+    "click>=8.1",          # CLI
+    "rich>=13.0",          # pretty diff/summary output
+]
+
+[project.scripts]
+extractor = "extractor.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/extractor"]

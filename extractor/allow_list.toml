@@ -1,0 +1,34 @@
+# extractor/allow_list.toml
+#
+# Curated list of prompt-bearing source symbols that auto-include cannot detect
+# mechanically. Each entry: file:line:symbol triple, 1-line rationale, and a
+# `reviewed_at` codex commit SHA recording when this entry was last verified
+# against upstream.
+#
+# Source-of-truth for non-mechanical prompt extraction. See /SPEC.md §2.1 (B)
+# and §2.3.1 (shim function list).
+#
+# Populated at M2-M5. M1 ships an empty seed.
+
+# === Programmatic shim functions (SPEC §2.3.1) ===
+# To be populated from the explicit shim function list in SPEC §2.3.1.
+# Each entry routes the symbol to the in-workspace Rust shim; the shim
+# invokes it with the synthetic default context and emits both
+# *-template.md and *-default.md siblings.
+# Example shape (M5 will fill):
+#
+# [[entry]]
+# kind = "programmatic"
+# crate = "codex-core"
+# path = "src/context/environment.rs"
+# symbol = "EnvironmentContextFragment::body"
+# category = "context-fragment"
+# rationale = "Builds the <environment_context> XML fragment with cwd, sandbox state."
+# reviewed_at = "<codex commit SHA>"
+
+# === Inline raw-string constants ===
+# Inline `r#"..."#` constants reachable at runtime.
+# (M5 will populate; ~10-15 entries expected.)
+
+# === ContextualUserFragment body() impls ===
+# (M5 will populate; ~25 entries expected.)

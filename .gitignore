@@ -1,0 +1,22 @@
+# Python (uv)
+extractor/.venv/
+# extractor/uv.lock is committed for deterministic dep resolution (SPEC §13.2).
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+.python-version
+
+# Rust shim build artifacts
+extractor/codex-shim/target/
+extractor/codex-shim/Cargo.lock
+
+# Extractor scratch / output
+extractor/output/
+dry-run-summary.md
+dry-run-full.diff
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

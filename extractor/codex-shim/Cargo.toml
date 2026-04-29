@@ -1,0 +1,17 @@
+[package]
+name = "codex-prompt-extract-shim"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "In-workspace shim that invokes Codex prompt builders and serializes their output as JSON. Patched into codex-rs/Cargo.toml's [workspace.members] at extract time. See /SPEC.md §2.3.1. NEVER committed upstream."
+license = "Apache-2.0"
+
+[[bin]]
+name = "codex-prompt-extract-shim"
+path = "src/main.rs"
+
+[dependencies]
+# At extract time, the patch script will inject codex-core, codex-tools,
+# codex-code-mode, etc. as workspace dependencies (M5).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
