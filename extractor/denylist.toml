@@ -4,8 +4,9 @@
 # See /SPEC.md §2.1 (C).
 
 [paths]
-# Glob patterns (relative to codex-rs/) that auto-exclude entire directories or files.
+# Glob patterns (relative to codex-rs/) that auto-exclude.
 exclude = [
+    # Test/bench/example trees
     "tests/**",
     "benches/**",
     "examples/**",
@@ -14,6 +15,14 @@ exclude = [
     "**/*_test.rs",
     "third_party/**",
     "patches/**",
+    # Non-prompt embedded content (verified at rust-v0.126.0-alpha.12 dev iteration):
+    "**/hooks/schema/**",                     # JSON hook input/output schemas
+    "**/login/**/assets/**",                  # login HTML/CSS
+    "**/sandboxing/**/*.sbpl",                # Seatbelt sandbox policy
+    "**/shell-command/**/*.ps1",              # PowerShell parser source
+    "**/tui/**/tooltips.txt",                 # TUI UI text (per SPEC §1.2)
+    "**/execpolicy*/**/*.policy",             # execpolicy legacy data
+    "**/models-manager/models.json",          # handled by fan-out (§2.4), not auto-include
 ]
 
 [symbols]
