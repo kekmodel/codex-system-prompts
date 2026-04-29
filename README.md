@@ -30,7 +30,7 @@ Per [SPEC §8](./SPEC.md#8-automation), two equivalent paths trigger re-extracti
 
 ## Versioning model
 
-- Mirror tags are a **sparse subset** of upstream tags — only tags with material prompt diff get a mirror commit + tag (SPEC §13.3 / T2.4).
+- Mirror tags are a **sparse subset** of upstream tags — only tags with material prompt diff get a mirror commit + tag (SPEC §12.3 / T2.4).
 - The complete upstream tag history (including silent skips) lives in [`data/upstream-tags.md`](./data/upstream-tags.md).
 - Working tree is always at the latest extracted tag; historical inspection via `git checkout <tag>`.
 

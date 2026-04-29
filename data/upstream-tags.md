@@ -1,6 +1,6 @@
 # Upstream tag registry
 
-Per [SPEC §13.3](../SPEC.md#133-per-version-management-structure-piebald-style-v03-selective--t24), this file is the **lossless record** of every upstream `rust-v*` tag and its mirror status. It exists because the mirror's own git tags are a *sparse subset* — only material-prompt-diff tags get mirrored — so we need a separate registry to preserve the full upstream history.
+Per [SPEC §12.3](../SPEC.md#123-per-version-management-structure-piebald-style-v03-selective--t24), this file is the **lossless record** of every upstream `rust-v*` tag and its mirror status. It exists because the mirror's own git tags are a *sparse subset* — only material-prompt-diff tags get mirrored — so we need a separate registry to preserve the full upstream history.
 
 ## Status legend
 

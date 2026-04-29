@@ -1,9 +1,16 @@
-# codex-system-prompts — SPEC v0.3
+# codex-system-prompts — SPEC v0.4
 
-> Status: **Tier 1 + Tier 2 review findings applied (M1 ready)**.
-> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29).
+> Status: **M1 complete; M2 ready**. v0.4 is a cosmetic hotfix only (no semantic changes).
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29).
 > Codex baseline anchor: **latest upstream tag** (currently `rust-v0.126.0-alpha.12`, commit `921a304c36`).
 > Mirror philosophy: Piebald's `claude-code-system-prompts` (single tree at latest + git tags + frontmatter + CHANGELOG.md), adapted to Codex's hybrid architecture.
+
+### Change log (v0.3 → v0.4) — cosmetic
+
+- Swapped §12 ↔ §13 to restore monotonic section numbering. Rationale: v0.2 inserted "Versioning & re-extraction policy" as §13 above the existing §12 "Out-of-spec risks", producing out-of-order numbering (§10 → §11 → §13 → §12). v0.4 renames headings only — text content and order are unchanged.
+- §13 Versioning & re-extraction policy → **§12** (sub-sections §13.1–§13.6 → §12.1–§12.6).
+- §12 Out-of-spec risks → **§13**.
+- Cross-references updated: SPEC.md internal refs + `README.md` + `data/upstream-tags.md` anchor.
 
 ### Change log (v0.2 → v0.3) — applies SPEC_REVIEW_v0.2.md Tier 1 + Tier 2
 
@@ -13,7 +20,7 @@
 - **T2.1 (§2.2 fix)**: removed arbitrary 80-char inline-string threshold. Inline strings now extracted only via allow-list.
 - **T2.2 (§1.1, §2.1.1 add)**: declared **default-features baseline**. Feature-gated prompts (e.g., `child_agents_md`) under `prompts/feature-gated/<flag>/...`.
 - **T2.3 (§7, §3.4 fix)**: token-count framing — `tokens.template_o200k_base` for templates, `tokens.rendered_o200k_base` for default renderings. README disclaimer added.
-- **T2.4 (§3.5, §6.1, §13.3 fix)**: resolved tag-skip vs 1:1 mapping contradiction. Decision: **selective tag** (only material changes get a mirror tag), with full upstream tag log in `data/upstream-tags.md`.
+- **T2.4 (§3.5, §6.1, §12.3 fix)**: resolved tag-skip vs 1:1 mapping contradiction. Decision: **selective tag** (only material changes get a mirror tag), with full upstream tag log in `data/upstream-tags.md`. (§13.3 in v0.3, renumbered to §12.3 in v0.4.)
 - **T2.5 (§8.2 fix)**: dry-run output for manual Claude-driven mode is paginated/summarized to fit the conversation context window.
 
 ### Change log (v0.1 → v0.2)
@@ -21,7 +28,7 @@
 - §6 versioning: clarified "latest tag" baseline rule (NOT `main`), defined alpha vs stable handling.
 - §8 automation: added dual-mode support (Claude-driven manual + GH Action automation), both bound to the same deterministic extractor invocation.
 - §3.5 CHANGELOG: aligned with Piebald format (per-tag entry with `_+/-N tokens_` line, `**NEW:**` / `**REMOVED:**` markers).
-- New §13 "Versioning & re-extraction policy" — dedicated section per user request.
+- New §12 "Versioning & re-extraction policy" — dedicated section per user request. (§13 in v0.2, renumbered to §12 in v0.4.)
 
 ---
 
@@ -409,7 +416,7 @@ variables:
 ### 6.1 Alpha vs stable
 
 - **Both tracked.** Alphas (`rust-v0.126.0-alpha.N`) ship roughly weekly and frequently change prompts; stables (`rust-v0.125.0`) less often. Mirroring only stables would lose meaningful diff signal.
-- **Selective tag** (v0.3 — T2.4): no-prompt-diff upstream tags are **silently skipped** at the mirror level (no commit, no mirror tag). The complete upstream tag list — including all skipped tags with status — is recorded in `data/upstream-tags.md`. See §3.5 + §13.3.
+- **Selective tag** (v0.3 — T2.4): no-prompt-diff upstream tags are **silently skipped** at the mirror level (no commit, no mirror tag). The complete upstream tag list — including all skipped tags with status — is recorded in `data/upstream-tags.md`. See §3.5 + §12.3.
 - Pre-release alphas are **not** marked specially in CHANGELOG; treated identically to stables.
 
 ### 6.2 First baseline
@@ -550,23 +557,23 @@ All decisions locked as of v0.2 (2026-04-29). Implementation may proceed.
 
 ---
 
-## 13. Versioning & re-extraction policy (per user spec requirement)
+## 12. Versioning & re-extraction policy (per user spec requirement)
 
 This section consolidates the user-mandated requirements: *"main보다는 최신 릴리즈 버전 기준으로 baseline, 앞으로 codex 버전업이 될 때마다 spec 기준으로 반복해서 추출되게, 버전별로 관리되는 구조, CHANGELOG도 Piebald처럼."*
 
-### 13.1 Baseline policy (no `main` tracking)
+### 12.1 Baseline policy (no `main` tracking)
 
 - The mirror **never** tracks `openai/codex` `main`.
 - The mirror **always** anchors to a published git tag (alpha or stable, see §6).
 - Rationale: `main` may carry unreleased prompt edits; mirroring it would publish content the upstream project considers in-flight.
 
-### 13.2 Deterministic re-extraction
+### 12.2 Deterministic re-extraction
 
 - Every snapshot is produced by **the same single extractor invocation** (§8.1) against an explicit upstream tag.
 - The extractor is **byte-deterministic for a given (codex tag, extractor version)** pair.
 - This guarantees that v0.126.0-alpha.12 extracted today and re-extracted six months from now produces identical output (modulo extractor version bumps, which are themselves versioned in this repo's commit history).
 
-### 13.3 Per-version management structure (Piebald-style, v0.3 selective — T2.4)
+### 12.3 Per-version management structure (Piebald-style, v0.3 selective — T2.4)
 
 The mirror does **not** keep per-version directories. Instead:
 
@@ -580,7 +587,7 @@ The mirror does **not** keep per-version directories. Instead:
 
 This matches Piebald's *"@claude-code-system-prompts 처럼"* model with one explicit refinement: Codex's alpha cadence (~weekly) means many tags have no prompt change; selective tagging keeps the mirror's git log meaningful while `data/upstream-tags.md` preserves the lossless mapping.
 
-### 13.4 Re-extraction trigger flowchart
+### 12.4 Re-extraction trigger flowchart
 
 ```
 upstream `openai/codex` pushes new rust-v* tag
@@ -612,19 +619,19 @@ upstream `openai/codex` pushes new rust-v* tag
                   CHANGELOG entry visible at HEAD
 ```
 
-### 13.5 Mirror version vs. spec version
+### 12.5 Mirror version vs. spec version
 
 - Mirror tags = upstream Codex tags (1:1).
 - The **spec itself** (this SPEC.md) is versioned independently inside this repo (v0.1, v0.2, …). When extractor logic changes, spec version bumps; the next mirror commit records `spec_version` in its commit message footer.
 - Spec v0.x can produce mirror snapshots for many Codex tags. A single Codex tag can be re-extracted under multiple spec versions; the most recent extraction wins on `main` of this repo.
 
-### 13.6 Backfill (deferred)
+### 12.6 Backfill (deferred)
 
 Initial release covers only the latest tag at extraction time. Historical backfill (extracting older tags into commits with their original tag strings) is **deferred** and tracked as a post-M8 task.
 
 ---
 
-## 12. Out-of-spec risks (acknowledged)
+## 13. Out-of-spec risks (acknowledged)
 
 - **Codex evolves fast** (alpha tag ~daily). The extractor must be resilient to file moves; we should add a `previous_path:` migration hint when files relocate upstream.
 - **Personality interpolation has two implementations** (`models-manager/src/model_info.rs` vs. `protocol/src/openai_models.rs`) — extractor must mirror both code paths or pick a canonical one and document the choice.
