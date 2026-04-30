@@ -4,9 +4,9 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+89 tokens_
+_+145 tokens_
 
-Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 0, MODIFIED: 3, MOVED: 0, REMOVED: 0.
+Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 3, MODIFIED: 3, MOVED: 0, REMOVED: 0.
 
 ## `prompts/mode/`
 
@@ -18,6 +18,9 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 
 ## `prompts/orphan/`
 
+- **NEW:** `orphan-models-manager-default-personality-header.md` (**30** tk) — GPT-5 default personality header consumed by gpt-5.2-codex / exp-codex-personality slug branch in `local_personality_messages_for_slug` (model_info.rs:103-117).…
+- **NEW:** `orphan-models-manager-local-friendly-template.md` (**16** tk) — `personality_friendly` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the friendly personality. Inac…
+- **NEW:** `orphan-models-manager-local-pragmatic-template.md` (**10** tk) — `personality_pragmatic` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the pragmatic personality. In…
 - `orphan-core-templates-search-tool-tool-suggest-description.md` — token Δ +17 (413 → 430).
 
 ---
