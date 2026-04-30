@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 121
-description: Guardian output JSON-schema contract appended to the policy prompt at
-  runtime (defines outcome/risk_level/user_authorization fields).
+description: '`codex-rs/core/src/guardian/prompt.rs::guardian_output_contract_prompt`'
 ---
 You may use read-only tool checks to gather any additional context you need before deciding. When you are ready to answer, your final message must be strict JSON.
 

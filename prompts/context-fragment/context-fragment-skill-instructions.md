@@ -19,8 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 19
-description: '`SkillInstructions` ContextualUserFragment from `codex-rs/core/src/context/skill_instructions.rs`.
-  Role: ''user''. Markers: ''<skill>'' … ''</skill>''. body() captured as template.'
+description: '`SkillInstructions` ContextualUserFragment.'
 ---
 <skill>
 

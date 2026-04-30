@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 6900
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/consequential_tool_message_templates.json`.
-  Category: tool. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/consequential_tool_message_templates.json`'
 ---
 {
   "schema_version": 4,

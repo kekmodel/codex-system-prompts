@@ -14,7 +14,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 23
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/approval_policy/never.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/approval_policy/never.md`'
 ---
 Approval policy is currently never. Do not provide the `sandbox_permissions` for any reason, commands will be rejected.

@@ -13,10 +13,8 @@ extraction:
 variables: []
 tokens:
   o200k_base: 291
-description: Orphan file at `codex-rs/core/templates/collab/experimental_prompt.md`.
-  Present in the upstream tree but NOT `include_str!`'d by any shipping crate as of
-  `rust-v0.128.0-alpha.1`. Per SPEC §1.3 boundary cases, preserved here for historical
-  reference. NOT part of the canonical shipping prompt corpus.
+description: 'Orphan: `codex-rs/core/templates/collab/experimental_prompt.md` (not
+  `include_str!`''d).'
 ---
 ## Multi agents
 You have the possibility to spawn and use other agents to complete a task. For example, this can be use for:

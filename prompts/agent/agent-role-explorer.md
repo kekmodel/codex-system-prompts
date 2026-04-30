@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 188
-description: Explorer role description — inline string in role.rs DEFAULT_ROLE_CONFIG
-  table.
+description: '`codex-rs/core/src/agent/role.rs`'
 ---
 Use `explorer` for specific codebase questions.
 Explorers are fast and authoritative.

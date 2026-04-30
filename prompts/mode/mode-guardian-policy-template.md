@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 1416
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/guardian/policy_template.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/guardian/policy_template.md`'
 ---
 You are judging one planned coding-agent action.
 Assess the exact action's intrinsic risk and whether the transcript authorizes its target and side effects. Then derive `outcome` from tenant policy, `risk_level`, and `user_authorization`.

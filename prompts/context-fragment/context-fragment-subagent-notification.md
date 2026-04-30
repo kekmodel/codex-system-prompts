@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 11
-description: '`SubagentNotification` ContextualUserFragment from `codex-rs/core/src/context/subagent_notification.rs`.
-  Role: ''user''. Markers: ''<subagent_notification>'' … ''</subagent_notification>''.
-  body() captured as template.'
+description: '`SubagentNotification` ContextualUserFragment.'
 ---
 <subagent_notification>
 

@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 2
-description: '`RealtimeStartWithInstructions` ContextualUserFragment from `codex-rs/core/src/context/realtime_start_with_instructions.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as template.'
+description: '`RealtimeStartWithInstructions` ContextualUserFragment.'
 ---
 
 {}
-

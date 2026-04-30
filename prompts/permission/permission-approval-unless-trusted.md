@@ -14,7 +14,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 50
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/approval_policy/unless_trusted.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/approval_policy/unless_trusted.md`'
 ---
  Approvals are your mechanism to get user consent to run shell commands without the sandbox. `approval_policy` is `unless-trusted`: The harness will escalate most commands for user approval, apart from a limited allowlist of safe "read" commands.

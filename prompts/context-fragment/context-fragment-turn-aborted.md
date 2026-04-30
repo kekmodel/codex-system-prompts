@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 11
-description: '`TurnAborted` ContextualUserFragment from `codex-rs/core/src/context/turn_aborted.rs`.
-  Role: ''user''. Markers: ''<turn_aborted>'' … ''</turn_aborted>''. body() captured
-  as template.'
+description: '`TurnAborted` ContextualUserFragment.'
 ---
 <turn_aborted>
 

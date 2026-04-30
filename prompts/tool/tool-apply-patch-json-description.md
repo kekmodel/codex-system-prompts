@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 706
-description: JSON-API variant of the apply_patch tool description (paired with apply_patch_tool_instructions.md
-  / apply_patch.lark grammar).
+description: '`codex-rs/tools/src/apply_patch_tool.rs::APPLY_PATCH_JSON_TOOL_DESCRIPTION`'
 ---
 Use the `apply_patch` tool to edit files.
 Your patch language is a stripped‑down, file‑oriented diff format designed to be easy to parse and safe to apply. You can think of it as a high‑level envelope:

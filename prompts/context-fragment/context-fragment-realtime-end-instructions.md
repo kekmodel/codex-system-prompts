@@ -19,11 +19,9 @@ extraction:
 variables: []
 tokens:
   o200k_base: 5
-description: '`RealtimeEndInstructions` ContextualUserFragment from `codex-rs/core/src/context/realtime_end_instructions.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as template.'
+description: '`RealtimeEndInstructions` ContextualUserFragment.'
 ---
 
 {}
 
 Reason: {}
-

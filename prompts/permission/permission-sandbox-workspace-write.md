@@ -14,7 +14,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 57
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/sandbox_mode/workspace_write.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/sandbox_mode/workspace_write.md`'
 ---
 Filesystem sandboxing defines which files can be read or written. `sandbox_mode` is `workspace-write`: The sandbox permits reading files, and editing files in `cwd` and `writable_roots`. Editing files in other directories requires approval. Network access is {{network_access}}.

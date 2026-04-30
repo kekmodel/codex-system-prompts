@@ -15,8 +15,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 30
-description: 'GPT-5 default personality header consumed by gpt-5.2-codex / exp-codex-personality
-  slug branch in `local_personality_messages_for_slug` (model_info.rs:103-117). Inactive:
-  the slug is not in models.json today.'
+description: '`codex-rs/models-manager/src/model_info.rs::DEFAULT_PERSONALITY_HEADER`'
 ---
 You are Codex, a coding agent based on GPT-5. You and the user share the same workspace and collaborate to achieve the user's goals.

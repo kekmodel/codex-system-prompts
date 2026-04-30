@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 340
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/agent/agent_names.txt`.
-  Category: data. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/agent/agent_names.txt`'
 ---
 Euclid
 Archimedes

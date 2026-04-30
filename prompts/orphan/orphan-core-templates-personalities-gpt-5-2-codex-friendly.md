@@ -13,10 +13,8 @@ extraction:
 variables: []
 tokens:
   o200k_base: 378
-description: Orphan file at `codex-rs/core/templates/personalities/gpt-5.2-codex_friendly.md`.
-  Present in the upstream tree but NOT `include_str!`'d by any shipping crate as of
-  `rust-v0.128.0-alpha.1`. Per SPEC §1.3 boundary cases, preserved here for historical
-  reference. NOT part of the canonical shipping prompt corpus.
+description: 'Orphan: `codex-rs/core/templates/personalities/gpt-5.2-codex_friendly.md`
+  (not `include_str!`''d).'
 ---
 # Personality
 

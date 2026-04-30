@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 6060
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/memories/write/templates/memories/stage_one_system.md`.
-  Category: memory. Description will be refined at M5 review.'
+description: '`codex-rs/memories/write/templates/memories/stage_one_system.md`'
 ---
 ## Memory Writing Agent: Phase 1 (Single Rollout)
 

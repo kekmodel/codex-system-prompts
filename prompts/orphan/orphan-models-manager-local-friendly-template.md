@@ -15,8 +15,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 16
-description: '`personality_friendly` variable body for the gpt-5.2-codex slug. Substituted
-  into `{{ personality }}` placeholder when user picks the friendly personality. Inactive
-  today (slug not registered).'
+description: '`codex-rs/models-manager/src/model_info.rs::LOCAL_FRIENDLY_TEMPLATE`'
 ---
 You optimize for team morale and being a supportive teammate as much as code quality.

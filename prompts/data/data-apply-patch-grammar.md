@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 173
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/tools/src/tool_apply_patch.lark`.
-  Category: data. Description will be refined at M5 review.'
+description: '`codex-rs/tools/src/tool_apply_patch.lark`'
 ---
 start: begin_patch hunk+ end_patch
 begin_patch: "*** Begin Patch" LF

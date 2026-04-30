@@ -15,7 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 162
-description: Code-mode `wait` tool description template (paired with `exec`).
+description: '`codex-rs/code-mode/src/description.rs::WAIT_DESCRIPTION_TEMPLATE`'
 ---
 - Use `wait` only after `exec` returns `Script running with cell ID ...`.
 - `cell_id` identifies the running `exec` cell to resume.

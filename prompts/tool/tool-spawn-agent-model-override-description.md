@@ -15,6 +15,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 44
-description: Description for spawn_agent's optional `model` override parameter.
+description: '`codex-rs/tools/src/agent_tool.rs::SPAWN_AGENT_MODEL_OVERRIDE_DESCRIPTION`'
 ---
 Optional model override for the new agent. Leave unset to inherit the same model as the parent, which is the preferred default. Only set this when the user explicitly asks for a different model or the task clearly requires one.

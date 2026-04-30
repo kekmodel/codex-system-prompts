@@ -112,13 +112,7 @@ def emit(
             extraction_pass=3,
             extraction_method="orphan_walk",
             tokens_o200k_base=token_count,
-            description=(
-                f"Orphan file at `codex-rs/{rel}`. Present in the upstream tree "
-                f"but NOT `include_str!`'d by any shipping crate as of "
-                f"`{codex_version}`. Per SPEC §1.3 boundary cases, preserved "
-                f"here for historical reference. NOT part of the canonical "
-                f"shipping prompt corpus."
-            ),
+            description=f"Orphan: `codex-rs/{rel}` (not `include_str!`'d).",
             extra={"source": {"shipping_status": "not_shipped"}},
         )
 

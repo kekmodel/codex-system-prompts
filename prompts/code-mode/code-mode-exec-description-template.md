@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 700
-description: Code-mode `exec` tool description template — programmatic preface for
-  the JS-orchestration `exec` tool.
+description: '`codex-rs/code-mode/src/description.rs::EXEC_DESCRIPTION_TEMPLATE`'
 ---
 Run JavaScript code to orchestrate/compose tool calls
 - Evaluates the provided JavaScript code in a fresh V8 isolate as an async module.

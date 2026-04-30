@@ -13,10 +13,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 1037
-description: Orphan file at `codex-rs/core/templates/agents/orchestrator.md`. Present
-  in the upstream tree but NOT `include_str!`'d by any shipping crate as of `rust-v0.128.0-alpha.1`.
-  Per SPEC §1.3 boundary cases, preserved here for historical reference. NOT part
-  of the canonical shipping prompt corpus.
+description: 'Orphan: `codex-rs/core/templates/agents/orchestrator.md` (not `include_str!`''d).'
 ---
 - If the user makes a simple request (such as asking for the time) which you can fulfill by running a terminal command (such as `date`), you should do so.
 - Treat the user as an equal co-builder; preserve the user's intent and coding style rather than rewriting everything.

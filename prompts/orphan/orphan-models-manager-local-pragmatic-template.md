@@ -15,8 +15,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 10
-description: '`personality_pragmatic` variable body for the gpt-5.2-codex slug. Substituted
-  into `{{ personality }}` placeholder when user picks the pragmatic personality.
-  Inactive today (slug not registered).'
+description: '`codex-rs/models-manager/src/model_info.rs::LOCAL_PRAGMATIC_TEMPLATE`'
 ---
 You are a deeply pragmatic, effective software engineer.

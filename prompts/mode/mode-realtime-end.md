@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 38
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/realtime/realtime_end.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/realtime/realtime_end.md`'
 ---
 Realtime conversation ended.
 

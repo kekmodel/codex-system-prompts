@@ -13,10 +13,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 1436
-description: Orphan file at `codex-rs/core/gpt_5_codex_prompt.md`. Present in the
-  upstream tree but NOT `include_str!`'d by any shipping crate as of `rust-v0.128.0-alpha.1`.
-  Per SPEC §1.3 boundary cases, preserved here for historical reference. NOT part
-  of the canonical shipping prompt corpus.
+description: 'Orphan: `codex-rs/core/gpt_5_codex_prompt.md` (not `include_str!`''d).'
 ---
 You are Codex, based on GPT-5. You are running as a coding agent in the Codex CLI on a user's computer.
 

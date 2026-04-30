@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 1370
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/review_prompt.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/review_prompt.md`'
 ---
 # Review guidelines:
 

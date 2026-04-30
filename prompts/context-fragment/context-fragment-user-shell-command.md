@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 37
-description: '`UserShellCommand` ContextualUserFragment from `codex-rs/core/src/context/user_shell_command.rs`.
-  Role: ''user''. Markers: ''<user_shell_command>'' … ''</user_shell_command>''. body()
-  captured as template.'
+description: '`UserShellCommand` ContextualUserFragment.'
 ---
 <user_shell_command>
 

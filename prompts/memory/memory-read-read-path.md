@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 1532
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/memories/read/templates/memories/read_path.md`.
-  Category: memory. Description will be refined at M5 review.'
+description: '`codex-rs/memories/read/templates/memories/read_path.md`'
 ---
 ## Memory
 

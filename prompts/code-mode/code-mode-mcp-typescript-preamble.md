@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 413
-description: TypeScript schema preamble injected into code-mode tool description for
-  the MCP nested-tool API.
+description: '`codex-rs/code-mode/src/description.rs::MCP_TYPESCRIPT_PREAMBLE`'
 ---
 type Role = "user" | "assistant";
 type MetaObject = Record<string, unknown>;

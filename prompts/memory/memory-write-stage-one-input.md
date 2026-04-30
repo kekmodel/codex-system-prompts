@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 86
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/memories/write/templates/memories/stage_one_input.md`.
-  Category: memory. Description will be refined at M5 review.'
+description: '`codex-rs/memories/write/templates/memories/stage_one_input.md`'
 ---
 Analyze this rollout and produce JSON with `raw_memory`, `rollout_summary`, and `rollout_slug` (use empty string when unknown).
 

@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 333
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/approval_policy/on_request_rule_request_permission.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/approval_policy/on_request_rule_request_permission.md`'
 ---
 # Permission Requests
 
