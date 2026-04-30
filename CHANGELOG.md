@@ -4,9 +4,9 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+6,210 tokens_
+_+7,457 tokens_
 
-Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 35, MODIFIED: 18, MOVED: 0, REMOVED: 0.
+Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 37, MODIFIED: 18, MOVED: 0, REMOVED: 0.
 
 ## `prompts/mode/`
 
@@ -46,8 +46,8 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 - **NEW:** `tool-list-mcp-resources.md` (**161** tk) — `list_mcp_resources` ToolSpec.
 - **NEW:** `tool-read-mcp-resource.md` (**147** tk) — `read_mcp_resource` ToolSpec.
 - **NEW:** `tool-report-agent-job-result.md` (**159** tk) — `report_agent_job_result` ToolSpec.
-- **NEW:** `tool-request-permissions.md` (**91** tk) — `request_permissions` ToolSpec.
-- **NEW:** `tool-request-user-input.md` (**212** tk) — `request_user_input` ToolSpec.
+- **NEW:** `tool-request-permissions.md` (**133** tk) — `request_permissions` ToolSpec.
+- **NEW:** `tool-request-user-input.md` (**226** tk) — `request_user_input` ToolSpec.
 - **NEW:** `tool-resume-agent.md` (**92** tk) — `resume_agent` ToolSpec.
 - **NEW:** `tool-send-input.md` (**197** tk) — `send_input` ToolSpec.
 - **NEW:** `tool-send-message.md` (**132** tk) — `send_message` ToolSpec.
@@ -55,6 +55,8 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 - **NEW:** `tool-shell-command-windows.md` (**345** tk) — `shell_command` ToolSpec.
 - **NEW:** `tool-shell-unix.md` (**174** tk) — `shell` ToolSpec.
 - **NEW:** `tool-shell-windows.md` (**379** tk) — `shell` ToolSpec.
+- **NEW:** `tool-spawn-agent-v2.md` (**313** tk) — `spawn_agent` ToolSpec.
+- **NEW:** `tool-spawn-agent.md` (**878** tk) — `spawn_agent` ToolSpec.
 - **NEW:** `tool-spawn-agents-on-csv.md` (**374** tk) — `spawn_agents_on_csv` ToolSpec.
 - **NEW:** `tool-test-sync-tool.md` (**211** tk) — `test_sync_tool` ToolSpec.
 - **NEW:** `tool-tool-suggest.md` (**657** tk) — `tool_suggest` ToolSpec.

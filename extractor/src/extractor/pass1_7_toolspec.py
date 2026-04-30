@@ -12,9 +12,11 @@ Description value shapes handled in this first cut:
   binding in the enclosing function (covers the `cfg!(windows) { … } else { … }`
   pattern in `local_tool.rs`).
 - direct call ``some_helper_fn()`` or ``some_helper_fn(args).to_string()``
-  — captured as a "dynamic" body referencing the helper. Resolving the helper
-  body to its template + arg list is a follow-up (covered separately in
-  pass1_5_allowlist for explicit helpers we care about).
+  — same-file helper bodies are resolved by picking the longest string-bearing
+  expression in the body (covers the multi-branch ``spawn_agent_tool_description``
+  helpers and the simpler ``request_*_tool_description`` ones). Placeholders
+  ``{name}`` referencing same-fn ``let`` bindings or file-level ``const`` are
+  substituted in a single pass; unresolved placeholders stay verbatim.
 
 JsonSchema parameter descriptions are intentionally NOT extracted here yet —
 that's a separate sub-pass tracked under M9.
@@ -104,7 +106,7 @@ class ToolSpecCapture:
     line: int
     tool_name: str
     description: str         # raw description text the model receives (no framing)
-    description_kind: str    # "static_plain" | "static_raw" | "const_ref" | "let_literal" | "fn_resolved" | "unresolved"
+    description_kind: str    # "static_plain" | "static_raw" | "const_ref" | "let_binding" | "cfg_conditional" | "fn_resolved" | "fn_call" | "unresolved"
     let_binding_kind: str | None = None  # populated when sub-kind="let_*"
     fn_callee: str | None = None         # populated when description came from a fn
 
@@ -395,24 +397,254 @@ def _classify_inline_string(value: str) -> str | None:
     return None
 
 
-def _enclosing_fn_text(text: str, struct_pos: int) -> str:
-    """Return the text of the function containing the ToolSpec at struct_pos.
+_HELPER_FN_OPEN_TPL = (
+    r"\b(?:pub\s+)?fn\s+{name}\s*\([^)]*\)\s*->\s*String\s*\{{"
+)
+_PLACEHOLDER_RX = re.compile(r"\{(\w+)\}")
 
-    Heuristic: walk backwards to the most recent `pub fn` / `fn` opener,
-    then forward through balanced braces.
+
+def _scan_to_semicolon(text: str, start: int) -> int:
+    """Return the index of the `;` ending an expression that begins at `start`.
+
+    Respects strings, raw strings, char literals, comments, and bracket depth.
+    Returns -1 if no terminating `;` is found.
     """
-    fn_open_rx = re.compile(r"\b(?:pub\s+)?fn\s+\w+\s*[<(]", re.MULTILINE)
+    depth = 0
+    pos = start
+    n = len(text)
+    while pos < n:
+        c = text[pos]
+        if c == "r" and pos + 1 < n:
+            rm = re.match(r'r(#*)"', text[pos:])
+            if rm:
+                hashes = rm.group(1)
+                end_pat = '"' + hashes
+                end = text.find(end_pat, pos + len(rm.group(0)))
+                if end == -1:
+                    return -1
+                pos = end + len(end_pat)
+                continue
+        if c == "'" and pos + 1 < n:
+            j = pos + 2 if text[pos + 1] != "\\" else pos + 3
+            if j < n and text[j] == "'":
+                pos = j + 1
+                continue
+        if c == '"':
+            pos += 1
+            while pos < n:
+                if text[pos] == "\\":
+                    pos += 2
+                    continue
+                if text[pos] == '"':
+                    pos += 1
+                    break
+                pos += 1
+            continue
+        if c == "/" and pos + 1 < n:
+            if text[pos + 1] == "/":
+                nl = text.find("\n", pos)
+                pos = nl + 1 if nl != -1 else n
+                continue
+            if text[pos + 1] == "*":
+                end = text.find("*/", pos + 2)
+                pos = end + 2 if end != -1 else n
+                continue
+        if c in "({[":
+            depth += 1
+        elif c in ")}]":
+            depth -= 1
+        elif c == ";" and depth == 0:
+            return pos
+        pos += 1
+    return -1
+
+
+def _collect_let_strings(body_text: str) -> dict[str, str]:
+    """Collect ``let <var> = <string-expr>;`` mappings from a fn body.
+
+    Only inline string-bearing expressions (plain literal, raw literal,
+    ``format!`` template) are recorded. Other shapes (function calls,
+    conditionals, .map() chains) are skipped — the placeholder will stay
+    verbatim in the substituted result.
+    """
+    out: dict[str, str] = {}
+    let_rx = re.compile(r"\blet\s+(\w+)\s*(?::\s*[^=]+)?=\s*", re.MULTILINE)
+    for lm in let_rx.finditer(body_text):
+        var = lm.group(1)
+        if var in out:
+            continue
+        expr_start = lm.end()
+        semi = _scan_to_semicolon(body_text, expr_start)
+        if semi == -1:
+            continue
+        expr = body_text[expr_start:semi].strip()
+        s = _classify_inline_string(expr)
+        if s is not None:
+            out[var] = s
+    return out
+
+
+def _string_literal_spans(text: str) -> list[tuple[int, int, str]]:
+    """Return (start, end_exclusive, body) for every raw or plain string
+    literal in `text`. Body is the inner content; for plain strings the
+    escapes are NOT decoded here (callers decide).
+    """
+    spans: list[tuple[int, int, str]] = []
+    pos = 0
+    n = len(text)
+    while pos < n:
+        c = text[pos]
+        if c == "r" and pos + 1 < n:
+            rm = re.match(r'r(#*)"', text[pos:])
+            if rm:
+                hashes = rm.group(1)
+                end_pat = '"' + hashes
+                start_inner = pos + len(rm.group(0))
+                end = text.find(end_pat, start_inner)
+                if end == -1:
+                    return spans
+                spans.append((pos, end + len(end_pat), text[start_inner:end]))
+                pos = end + len(end_pat)
+                continue
+        if c == "'" and pos + 1 < n:
+            j = pos + 2 if text[pos + 1] != "\\" else pos + 3
+            if j < n and text[j] == "'":
+                pos = j + 1
+                continue
+        if c == '"':
+            start_inner = pos + 1
+            scan = start_inner
+            while scan < n:
+                if text[scan] == "\\":
+                    scan += 2
+                    continue
+                if text[scan] == '"':
+                    break
+                scan += 1
+            if scan >= n:
+                return spans
+            raw = text[start_inner:scan]
+            try:
+                decoded = raw.encode("utf-8", "replace").decode("unicode_escape", "replace")
+            except UnicodeDecodeError:
+                decoded = raw
+            spans.append((pos, scan + 1, decoded))
+            pos = scan + 1
+            continue
+        if c == "/" and pos + 1 < n:
+            if text[pos + 1] == "/":
+                nl = text.find("\n", pos)
+                pos = nl + 1 if nl != -1 else n
+                continue
+            if text[pos + 1] == "*":
+                end = text.find("*/", pos + 2)
+                pos = end + 2 if end != -1 else n
+                continue
+        pos += 1
+    return spans
+
+
+def _resolve_helper_fn_description(
+    file_text: str, fn_name: str, codex_rs_root: Path
+) -> str | None:
+    """Resolve a helper fn ``-> String`` body to its dominant description text.
+
+    Strategy: pick the longest string literal in the fn body. Substitute
+    ``{var}`` placeholders that match a same-fn ``let var = ...;`` literal
+    binding or a file-level ``const VAR: &str = "...";``. Anything else
+    stays verbatim — the model still sees an explicit placeholder rather
+    than silent omission.
+    """
+    fn_open_rx = re.compile(_HELPER_FN_OPEN_TPL.format(name=re.escape(fn_name)))
+    m = fn_open_rx.search(file_text)
+    if not m:
+        return None
+    body_open = m.end() - 1
+    body_close = _scan_balanced(file_text, body_open + 1)
+    if body_close == -1:
+        return None
+    body_text = file_text[body_open + 1:body_close]
+
+    spans = _string_literal_spans(body_text)
+    if not spans:
+        return None
+    longest = max(spans, key=lambda s: len(s[2]))
+    body = longest[2]
+
+    let_map = _collect_let_strings(body_text)
+
+    def substitute(s: str) -> str:
+        def repl(match: re.Match) -> str:
+            name = match.group(1)
+            if name in let_map:
+                return let_map[name]
+            const_body = _resolve_string_const(file_text, name)
+            if const_body is not None:
+                return const_body
+            return match.group(0)
+
+        return _PLACEHOLDER_RX.sub(repl, s)
+
+    prev = body
+    for _ in range(4):
+        nxt = substitute(prev)
+        if nxt == prev:
+            break
+        prev = nxt
+    return prev
+
+
+def _enclosing_fn(text: str, struct_pos: int) -> tuple[str, str] | None:
+    """Return (fn_name, fn_text) for the function containing struct_pos.
+
+    Heuristic: walk backwards to the most recent `pub fn NAME` / `fn NAME`
+    opener, then forward through balanced braces.
+    """
+    fn_open_rx = re.compile(r"\b(?:pub\s+)?fn\s+(\w+)\s*[<(]", re.MULTILINE)
     candidates = list(fn_open_rx.finditer(text, 0, struct_pos))
     if not candidates:
-        return text
+        return None
     fn_match = candidates[-1]
     body_open = text.find("{", fn_match.end())
     if body_open == -1:
-        return text
+        return None
     body_close = _scan_balanced(text, body_open + 1)
     if body_close == -1:
-        return text
-    return text[fn_match.start():body_close + 1]
+        return None
+    return fn_match.group(1), text[fn_match.start():body_close + 1]
+
+
+def _enclosing_fn_text(text: str, struct_pos: int) -> str:
+    """Backwards-compat shim — returns fn body text only."""
+    res = _enclosing_fn(text, struct_pos)
+    return res[1] if res else text
+
+
+def _find_sibling_description_helper(
+    file_text: str, enclosing_fn_name: str
+) -> str | None:
+    """Look for a same-file ``fn <X>_tool_description(...) -> String`` whose
+    name shares a token with `enclosing_fn_name` (e.g.
+    ``create_request_permissions_tool`` matches ``request_permissions_tool_description``).
+    Returns the helper fn name, or None.
+    """
+    helper_rx = re.compile(
+        r"\b(?:pub\s+)?fn\s+(\w+_tool_description)\s*\([^)]*\)\s*->\s*String\s*\{",
+        re.MULTILINE | re.DOTALL,
+    )
+    candidates = [m.group(1) for m in helper_rx.finditer(file_text)]
+    if not candidates:
+        return None
+    enc_tokens = set(enclosing_fn_name.split("_"))
+    best: tuple[int, str] | None = None
+    for cand in candidates:
+        cand_tokens = set(cand.split("_"))
+        score = len(enc_tokens & cand_tokens)
+        if score == 0:
+            continue
+        if best is None or score > best[0]:
+            best = (score, cand)
+    return best[1] if best else None
 
 
 def _extract_parameters(
@@ -524,7 +756,9 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
 
             if is_shorthand:
                 # Resolve the `description` variable in the enclosing fn.
-                fn_text = _enclosing_fn_text(text, m.start())
+                enc = _enclosing_fn(text, m.start())
+                fn_text = enc[1] if enc else text
+                enc_name = enc[0] if enc else ""
                 sub_kind, sub_body, sub_label, sub_win, sub_unix = _resolve_let_binding(
                     fn_text, "description"
                 )
@@ -533,9 +767,27 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                 if sub_kind == "cfg_conditional":
                     windows_body = sub_win
                     unix_body = sub_unix
+                elif sub_kind == "let_fn_call" and sub_label:
+                    fn_callee = sub_label
+                    resolved = _resolve_helper_fn_description(
+                        text, sub_label, codex_rs_root
+                    )
+                    if resolved is not None:
+                        kind = "fn_resolved"
+                        body = resolved
+                elif sub_kind == "let_unresolved":
+                    helper = _find_sibling_description_helper(text, enc_name)
+                    if helper:
+                        resolved = _resolve_helper_fn_description(
+                            text, helper, codex_rs_root
+                        )
+                        if resolved is not None:
+                            kind = "fn_resolved"
+                            fn_callee = helper
+                            body = resolved
                 else:
                     body = sub_body
-                if sub_label:
+                if sub_label and fn_callee is None:
                     fn_callee = sub_label
             else:
                 desc_text = block[desc_span[0]:desc_span[1]].strip()
@@ -572,7 +824,9 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                         kind = "unresolved"
                         fn_callee = const_call_m.group(1)
                 elif ident_m:
-                    fn_text = _enclosing_fn_text(text, m.start())
+                    enc = _enclosing_fn(text, m.start())
+                    fn_text = enc[1] if enc else text
+                    enc_name = enc[0] if enc else ""
                     sub_kind, sub_body, sub_label, sub_win, sub_unix = _resolve_let_binding(
                         fn_text, ident_m.group(1)
                     )
@@ -581,15 +835,38 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                     if sub_kind == "cfg_conditional":
                         windows_body = sub_win
                         unix_body = sub_unix
+                    elif sub_kind == "let_fn_call" and sub_label:
+                        fn_callee = sub_label
+                        resolved = _resolve_helper_fn_description(
+                            text, sub_label, codex_rs_root
+                        )
+                        if resolved is not None:
+                            kind = "fn_resolved"
+                            body = resolved
+                    elif sub_kind == "let_unresolved":
+                        helper = _find_sibling_description_helper(text, enc_name)
+                        if helper:
+                            resolved = _resolve_helper_fn_description(
+                                text, helper, codex_rs_root
+                            )
+                            if resolved is not None:
+                                kind = "fn_resolved"
+                                fn_callee = helper
+                                body = resolved
                     else:
                         body = sub_body
-                    if sub_label:
+                    if sub_label and fn_callee is None:
                         fn_callee = sub_label
                 elif fn_call_m:
-                    kind = "fn_call"
                     fn_callee = fn_call_m.group(1)
-                    # Body left empty — emit step decides whether to skip
-                    # this capture or fold the helper resolution in.
+                    resolved = _resolve_helper_fn_description(
+                        text, fn_callee, codex_rs_root
+                    )
+                    if resolved is not None:
+                        kind = "fn_resolved"
+                        body = resolved
+                    else:
+                        kind = "fn_call"
 
             # Pull JsonSchema parameter descriptions from the enclosing fn.
             # Use _enclosing_fn_text rather than the ToolSpec block itself

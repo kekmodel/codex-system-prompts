@@ -14,13 +14,13 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 91
+  o200k_base: 133
 description: '`request_permissions` ToolSpec.'
 ---
 {
   "type": "function",
   "name": "request_permissions",
-  "description": "(no `let description = ...` found in enclosing fn)",
+  "description": "Request additional filesystem or network permissions from the user and wait for the client to grant a subset of the requested permission profile. Granted permissions apply automatically to later shell-like commands in the current turn, or for the rest of the session if the client approves them at session scope.",
   "parameters": {
     "type": "object",
     "properties": {
