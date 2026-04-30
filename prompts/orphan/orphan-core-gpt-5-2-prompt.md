@@ -1,8 +1,8 @@
 ---
 name: 'Orphan: codex-rs/core/gpt_5_2_prompt.md'
 category: orphan
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.128.0
+codex_commit: e4310be51f617f5e60382038fa9cbf53a2429ca4
 source:
   path: codex-rs/core/gpt_5_2_prompt.md
   kind: orphan_unreferenced
@@ -14,9 +14,9 @@ variables: []
 tokens:
   o200k_base: 4570
 description: Orphan file at `codex-rs/core/gpt_5_2_prompt.md`. Present in the upstream
-  tree but NOT `include_str!`'d by any shipping crate as of `rust-v0.128.0-alpha.1`.
-  Per SPEC §1.3 boundary cases, preserved here for historical reference. NOT part
-  of the canonical shipping prompt corpus.
+  tree but NOT `include_str!`'d by any shipping crate as of `rust-v0.128.0`. Per SPEC
+  §1.3 boundary cases, preserved here for historical reference. NOT part of the canonical
+  shipping prompt corpus.
 ---
 You are GPT-5.2 running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.
 

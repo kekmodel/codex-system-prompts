@@ -1,8 +1,8 @@
 ---
 name: 'Tool: list_agents parameters'
 category: tool
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.128.0
+codex_commit: e4310be51f617f5e60382038fa9cbf53a2429ca4
 source:
   path: codex-rs/tools/src/agent_tool.rs
   kind: rust_jsonschema_property
