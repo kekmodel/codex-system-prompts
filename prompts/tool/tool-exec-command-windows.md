@@ -15,9 +15,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 315
+  o200k_base: 320
 description: '`exec_command` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "exec_command",
@@ -57,3 +58,4 @@ description: '`exec_command` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

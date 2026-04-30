@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 147
+  o200k_base: 152
 description: '`read_mcp_resource` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "read_mcp_resource",
@@ -36,3 +37,4 @@ description: '`read_mcp_resource` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

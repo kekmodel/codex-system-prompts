@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 856
+  o200k_base: 861
 description: '`apply_patch` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "apply_patch",
@@ -32,3 +33,4 @@ description: '`apply_patch` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

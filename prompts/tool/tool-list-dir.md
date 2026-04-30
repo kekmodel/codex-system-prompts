@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 190
+  o200k_base: 195
 description: '`list_dir` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "list_dir",
@@ -44,3 +45,4 @@ description: '`list_dir` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

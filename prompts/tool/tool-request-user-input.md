@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 226
+  o200k_base: 231
 description: '`request_user_input` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "request_user_input",
@@ -48,3 +49,4 @@ description: '`request_user_input` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

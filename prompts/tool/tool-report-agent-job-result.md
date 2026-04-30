@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 159
+  o200k_base: 164
 description: '`report_agent_job_result` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "report_agent_job_result",
@@ -40,3 +41,4 @@ description: '`report_agent_job_result` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

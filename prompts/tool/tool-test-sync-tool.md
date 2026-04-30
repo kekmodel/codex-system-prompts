@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 211
+  o200k_base: 216
 description: '`test_sync_tool` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "test_sync_tool",
@@ -48,3 +49,4 @@ description: '`test_sync_tool` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

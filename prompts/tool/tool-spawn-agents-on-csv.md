@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 374
+  o200k_base: 379
 description: '`spawn_agents_on_csv` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "spawn_agents_on_csv",
@@ -56,3 +57,4 @@ description: '`spawn_agents_on_csv` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

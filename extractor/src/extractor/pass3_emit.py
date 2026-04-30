@@ -307,7 +307,8 @@ def emit(
             rel_path = out_path.relative_to(out_root)
 
         tool_json = _build_tool_json(tc.tool_name, description_text, tc.parameters)
-        body = json.dumps(tool_json, indent=2, ensure_ascii=False) + "\n"
+        body_inner = json.dumps(tool_json, indent=2, ensure_ascii=False)
+        body = f"```json\n{body_inner}\n```\n"
         token_count = count_o200k_base(body)
 
         extra: dict = {"source": {"tool_name": tc.tool_name}}

@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 110
+  o200k_base: 115
 description: '`list_agents` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "list_agents",
@@ -32,3 +33,4 @@ description: '`list_agents` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

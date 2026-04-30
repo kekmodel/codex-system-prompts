@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 188
+  o200k_base: 193
 description: '`create_goal` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "create_goal",
@@ -36,3 +37,4 @@ description: '`create_goal` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

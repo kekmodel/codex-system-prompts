@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 191
+  o200k_base: 196
 description: '`view_image` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "view_image",
@@ -36,3 +37,4 @@ description: '`view_image` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

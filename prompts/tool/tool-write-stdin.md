@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 192
+  o200k_base: 197
 description: '`write_stdin` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "write_stdin",
@@ -44,3 +45,4 @@ description: '`write_stdin` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

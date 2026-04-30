@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 92
+  o200k_base: 97
 description: '`resume_agent` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "resume_agent",
@@ -32,3 +33,4 @@ description: '`resume_agent` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

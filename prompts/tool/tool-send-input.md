@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 197
+  o200k_base: 202
 description: '`send_input` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "send_input",
@@ -40,3 +41,4 @@ description: '`send_input` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 118
+  o200k_base: 123
 description: '`update_plan` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "update_plan",
@@ -32,3 +33,4 @@ description: '`update_plan` ToolSpec.'
     "additionalProperties": false
   }
 }
+```
