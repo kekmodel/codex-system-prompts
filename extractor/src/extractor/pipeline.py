@@ -33,6 +33,7 @@ class RunReport:
     pass3_allowlist_written: int
     pass3_fragments_written: int
     pass3_toolspec_written: int
+    pass3_toolspec_params_written: int
     pass3_uncategorized: int      # candidates with no rule match (separate from orphan-walk)
     orphan_written: int
     orphan_skipped_empty: int
@@ -117,6 +118,7 @@ def run(codex_root: Path, out_root: Path, tag: str | None) -> RunReport:
         pass3_allowlist_written=emitted.allowlist_written,
         pass3_fragments_written=emitted.fragment_written,
         pass3_toolspec_written=emitted.toolspec_written,
+        pass3_toolspec_params_written=emitted.toolspec_params_written,
         pass3_uncategorized=len(emitted.orphans),
         orphan_written=len(orphan_result.written),
         orphan_skipped_empty=len(orphan_result.skipped_empty),
