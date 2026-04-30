@@ -4,7 +4,7 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+4,898 tokens_
+_+5,932 tokens_
 
 Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 58, MODIFIED: 3, MOVED: 0, REMOVED: 0.
 
@@ -51,8 +51,8 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 - **NEW:** `tool-shell-command-parameters.md` (**124** tk) — Per-parameter `JsonSchema` descriptions for `shell_command` (4 parameters). Pass 1.7 (M9).
 - **NEW:** `tool-shell-description.md` (**333** tk) — Inline ToolSpec description for `shell` resolved from a `let description = …` binding (sub-kind `cfg_conditional`). Pass 1.7 (M9).
 - **NEW:** `tool-shell-parameters.md` (**84** tk) — Per-parameter `JsonSchema` descriptions for `shell` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-spawn-agent-description-v2.md` (**20** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description_v2(...)`. Body is a placeholder; resolving the helper is a fo…
-- **NEW:** `tool-spawn-agent-description.md` (**18** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description(...)`. Body is a placeholder; resolving the helper is a follo…
+- **NEW:** `tool-spawn-agent-description-v2.md` (**241** tk) — Inline ToolSpec description for `spawn_agent` (Pass 1.7, M9).
+- **NEW:** `tool-spawn-agent-description.md` (**831** tk) — Inline ToolSpec description for `spawn_agent` (Pass 1.7, M9).
 - **NEW:** `tool-spawn-agent-parameters-v2.md` (**77** tk) — Per-parameter `JsonSchema` descriptions for `spawn_agent` (1 parameter). Pass 1.7 (M9).
 - **NEW:** `tool-spawn-agents-on-csv-description.md` (**82** tk) — Inline ToolSpec description for `spawn_agents_on_csv` (literal `static_plain`). Captured by Pass 1.7 (M9).
 - **NEW:** `tool-spawn-agents-on-csv-parameters.md` (**211** tk) — Per-parameter `JsonSchema` descriptions for `spawn_agents_on_csv` (7 parameters). Pass 1.7 (M9).

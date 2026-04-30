@@ -374,6 +374,84 @@ def _classify_inline_string(value: str) -> str | None:
     return None
 
 
+def _resolve_fn_body_text(text: str, fn_name: str) -> str | None:
+    """Locate ``(pub )?fn <fn_name>(...)`` in `text` and return its body
+    (between the outermost `{` and matching `}`), or None if not found.
+    """
+    fn_open_rx = re.compile(
+        rf"\b(?:pub\s+)?fn\s+{re.escape(fn_name)}\s*[<(]", re.MULTILINE
+    )
+    m = fn_open_rx.search(text)
+    if not m:
+        return None
+    body_open = text.find("{", m.end())
+    if body_open == -1:
+        return None
+    body_close = _scan_balanced(text, body_open + 1)
+    if body_close == -1:
+        return None
+    return text[body_open + 1:body_close]
+
+
+_STRING_LITERAL_RX = re.compile(
+    r'(?P<raw>r(?P<hashes>#*)"(?P<rawbody>.*?)"(?P=hashes))'
+    r"|"
+    r'(?P<plain>"(?P<plainbody>(?:[^"\\]|\\.)*)")',
+    re.DOTALL,
+)
+
+
+def _harvest_string_literals(body: str) -> list[str]:
+    """Pull every Rust string literal (raw or plain, with optional escape
+    decode) out of `body`, preserving source order. Caller decides which
+    are prompt-shaped — we just hand back the raw text.
+    """
+    out: list[str] = []
+    for m in _STRING_LITERAL_RX.finditer(body):
+        if m.group("raw") is not None:
+            out.append(m.group("rawbody"))
+        elif m.group("plain") is not None:
+            text = m.group("plainbody")
+            try:
+                text = text.encode("utf-8", "replace").decode("unicode_escape", "replace")
+            except UnicodeDecodeError:
+                pass
+            out.append(text)
+    return out
+
+
+def _resolve_fn_call_body(text: str, fn_name: str) -> str | None:
+    """Try to render a useful Markdown body for a `description: fn_name(...)`
+    case by inlining the helper fn's prompt-shaped string literals.
+
+    Heuristic: find every Rust string literal in the helper's body, drop
+    obvious non-prompt strings (length ≤ 1, or containing only printable
+    punctuation), and present the survivors as separate Markdown sections.
+    Placeholders like `{agent_role_guidance}` are preserved verbatim — the
+    model receives them filled at runtime, but the structure is what matters
+    for review.
+
+    Returns None if the helper isn't defined in the same file.
+    """
+    body = _resolve_fn_body_text(text, fn_name)
+    if body is None:
+        return None
+    literals = _harvest_string_literals(body)
+    interesting = [
+        lit for lit in literals
+        if len(lit.strip()) > 16 and not lit.strip().isdigit()
+    ]
+    if not interesting:
+        return None
+    if len(interesting) == 1:
+        return interesting[0]
+    parts = [
+        f"## Branch {i + 1}\n\n{lit.strip()}"
+        for i, lit in enumerate(interesting)
+    ]
+    return "\n\n".join(parts) + "\n"
+
+
 def _enclosing_fn_text(text: str, struct_pos: int) -> str:
     """Return the text of the function containing the ToolSpec at struct_pos.
 
@@ -561,10 +639,15 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                 elif fn_call_m:
                     kind = "fn_call"
                     fn_callee = fn_call_m.group(1)
-                    body = (
-                        f"(dynamic — `{fn_callee}(...)` builds this description at "
-                        "runtime; see source)"
-                    )
+                    resolved = _resolve_fn_call_body(text, fn_callee)
+                    if resolved is not None:
+                        body = resolved
+                        kind = "fn_call_resolved"
+                    else:
+                        body = (
+                            f"(dynamic — `{fn_callee}(...)` builds this description at "
+                            "runtime; helper fn not in same file — see source)"
+                        )
 
             # Pull JsonSchema parameter descriptions from the enclosing fn.
             # Use _enclosing_fn_text rather than the ToolSpec block itself
