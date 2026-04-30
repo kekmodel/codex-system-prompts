@@ -1,8 +1,8 @@
 ---
 name: 'Tool: tool-spawn-agent-model-override-description'
 category: tool
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/tools/src/agent_tool.rs
   kind: rust_const
