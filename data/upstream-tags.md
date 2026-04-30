@@ -17,5 +17,12 @@ This table is hand-maintained for now: the M8 baseline row was seeded by hand, a
 | Upstream tag | Date (UTC) | Status | Mirror commit | Note |
 |---|---|---|---|---|
 | `rust-v0.126.0-alpha.12` | 2026-04-29 | `extracted` | (M8 baseline; mirror tag `rust-v0.126.0-alpha.12`) | Initial extraction baseline. Codex commit `ebdf3a878c8c7253504599bd384cd421a4e548c1`. All 91 captured files are NEW. Earlier upstream tags (`rust-v0.24.0-alpha.9`..`rust-v0.126.0-alpha.11`) are not backfilled per SPEC §13.6 (deferred post-M8 task). |
+| `rust-v0.126.0-alpha.13` | 2026-05-01 | `skipped_other` | — | Rolled up into `rust-v0.128.0-alpha.1` mirror commit (#2). The pre-§6.1-fix `extract.yml` jumped straight from upstream's latest to upstream's newest material tag without iterating intermediates, so we never extracted against this tag and don't know whether its captured-prompt diff was material. Recorded for historical lossless-mapping completeness; cannot be backfilled without rolling `main` back. |
+| `rust-v0.126.0-alpha.14` | 2026-05-01 | `skipped_other` | — | Same as `rust-v0.126.0-alpha.13`. |
+| `rust-v0.126.0-alpha.15` | 2026-05-01 | `skipped_other` | — | Same as `rust-v0.126.0-alpha.13`. |
+| `rust-v0.126.0-alpha.16` | 2026-05-01 | `skipped_other` | — | Same as `rust-v0.126.0-alpha.13`. |
+| `rust-v0.126.0-alpha.17` | 2026-05-01 | `skipped_other` | — | Same as `rust-v0.126.0-alpha.13`. |
+| `rust-v0.127.0` | 2026-05-01 | `skipped_other` | — | Same as `rust-v0.126.0-alpha.13`. (First stable upstream tag; rolled up rather than mirrored because of the same workflow defect.) |
+| `rust-v0.128.0-alpha.1` | 2026-05-01 | `extracted` | `e02dafd` (PR #2) | Second material extraction. 93 files changed (+408 / −273) vs. `rust-v0.126.0-alpha.12`. Diff conflates real prompt changes from alpha.12→alpha.1 with any unmirrored intermediate changes; the SPEC §6.1 multi-tag iteration fix (tracked as a future PR) prevents this in future runs. Mirror tag `rust-v0.128.0-alpha.1` was created by hand because `extract.yml` lacked a tagging step (added by `tag-on-merge.yml` in this PR). |
 
 > **Forward updates**: rows for `rust-v0.126.0-alpha.13` and later are added in the auto-mirror PR for each upstream tag. Non-material tags get a `skipped_no_prompt_diff` row and no mirror commit (per §3.5 selective tagging). Today this row is added by hand to the auto-mirror PR before merge; auto-append is a post-M8 enhancement.

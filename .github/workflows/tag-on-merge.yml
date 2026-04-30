@@ -1,0 +1,71 @@
+# Tag the merge commit when an `auto-mirror/<tag>` PR is merged into main.
+#
+# Closes a gap in `extract.yml` (M7), which pushes the auto-mirror branch and
+# opens the PR but never creates the mirror tag — so post-merge the registry
+# was inconsistent: main had the snapshot content but no `rust-v*` tag pointed
+# at the merge commit. Without this tag, `extract.yml`'s "Skip if mirror is
+# already at target" check would mis-fire and re-extract the same upstream tag
+# on every cron tick.
+#
+# This workflow runs on PR close, gates on `merged == true` and on the branch
+# pattern `auto-mirror/<tag>`, then creates the mirror tag (named identically
+# to the upstream tag — see SPEC §12.3) at the squash/merge commit.
+
+name: Tag on auto-mirror merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'auto-mirror/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main at merge commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+
+      - name: Derive mirror tag name from branch
+        id: tag
+        run: |
+          set -euo pipefail
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          TAG="${BRANCH#auto-mirror/}"
+          if [ -z "$TAG" ] || [ "$TAG" = "$BRANCH" ]; then
+            echo "Could not derive tag from branch '$BRANCH'." >&2
+            exit 1
+          fi
+          # Sanity check: must look like an upstream codex tag.
+          if ! printf '%s' "$TAG" | grep -qE '^rust-v[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "Branch tag '$TAG' does not match rust-vX.Y.Z[...]; refusing to create." >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Will create mirror tag: $TAG"
+
+      - name: Refuse if tag already exists
+        run: |
+          set -euo pipefail
+          if git rev-parse "refs/tags/${{ steps.tag.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag '${{ steps.tag.outputs.tag }}' already exists; refusing to overwrite." >&2
+            exit 1
+          fi
+
+      - name: Create + push mirror tag at merge commit
+        env:
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "codex-mirror-bot"
+          git config user.email "codex-mirror-bot@users.noreply.github.com"
+          git tag "$TAG_NAME" "$MERGE_SHA"
+          git push origin "$TAG_NAME"
+          echo "Pushed tag $TAG_NAME -> $MERGE_SHA"
