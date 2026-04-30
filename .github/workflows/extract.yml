@@ -54,14 +54,23 @@ jobs:
         id: tags
         run: |
           set -euo pipefail
+          # Read all rust-v* tags into a variable first, then take the head.
+          # Avoids SIGPIPE-from-head propagating under `set -o pipefail` when
+          # upstream has thousands of tags and the producer is still writing.
           if [ -n "${{ inputs.tag }}" ]; then
             TARGET="${{ inputs.tag }}"
           else
-            TARGET=$(git -C /tmp/codex tag --sort=-creatordate | grep '^rust-v' | head -1)
+            UPSTREAM_TAGS=$(git -C /tmp/codex tag --sort=-creatordate)
+            TARGET=$(printf '%s\n' "$UPSTREAM_TAGS" | grep '^rust-v' | head -1 || true)
+          fi
+          if [ -z "$TARGET" ]; then
+            echo "Could not determine target rust-v* tag from upstream." >&2
+            exit 1
           fi
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
-          OURS=$(git tag --sort=-creatordate | grep '^rust-v' | head -1 || echo "")
+          OUR_TAGS=$(git tag --sort=-creatordate || true)
+          OURS=$(printf '%s\n' "$OUR_TAGS" | grep '^rust-v' | head -1 || true)
           echo "ours=$OURS" >> "$GITHUB_OUTPUT"
           echo "Target: $TARGET"
           echo "Ours:   $OURS"
