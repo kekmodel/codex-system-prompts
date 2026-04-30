@@ -14,13 +14,13 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 212
+  o200k_base: 226
 description: '`request_user_input` ToolSpec.'
 ---
 {
   "type": "function",
   "name": "request_user_input",
-  "description": "(no `let description = ...` found in enclosing fn)",
+  "description": "Request user input for one to three short questions and wait for the response. This tool is only available in {allowed_modes}.",
   "parameters": {
     "type": "object",
     "properties": {
