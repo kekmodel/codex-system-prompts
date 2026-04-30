@@ -1,8 +1,8 @@
 ---
 name: 'Mode: mode-review-exit-success'
 category: mode
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.129.0-alpha.1
+codex_commit: 4d8f88e1458d931b940c27dd93e43e6b4b6cf92f
 source:
   path: codex-rs/core/templates/review/exit_success.xml
   kind: include_bytes
