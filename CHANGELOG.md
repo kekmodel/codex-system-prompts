@@ -4,13 +4,46 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+145 tokens_
+_+2,116 tokens_
 
-Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 3, MODIFIED: 3, MOVED: 0, REMOVED: 0.
+Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 33, MODIFIED: 3, MOVED: 0, REMOVED: 0.
 
 ## `prompts/mode/`
 
 - `mode-collab-default.md` — token Δ +72 (101 → 173).
+
+## `prompts/tool/`
+
+- **NEW:** `tool-close-agent-description-v2.md` (**41** tk) — Inline ToolSpec description for `close_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-close-agent-description.md` (**41** tk) — Inline ToolSpec description for `close_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-create-goal-description.md` (**55** tk) — Inline ToolSpec description for `create_goal` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-exec-command-description.md` (**69** tk) — Inline ToolSpec description for `exec_command` — `cfg!(windows)` conditional. Both branches captured side-by-side. Pass 1.7 (M9).
+- **NEW:** `tool-followup-task-description.md` (**48** tk) — Inline ToolSpec description for `followup_task` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-get-goal-description.md` (**24** tk) — Inline ToolSpec description for `get_goal` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-list-agents-description.md` (**18** tk) — Inline ToolSpec description for `list_agents` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-list-dir-description.md` (**18** tk) — Inline ToolSpec description for `list_dir` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-list-mcp-resource-templates-description.md` (**48** tk) — Inline ToolSpec description for `list_mcp_resource_templates` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-list-mcp-resources-description.md` (**40** tk) — Inline ToolSpec description for `list_mcp_resources` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-read-mcp-resource-description.md` (**16** tk) — Inline ToolSpec description for `read_mcp_resource` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-report-agent-job-result-description.md` (**20** tk) — Inline ToolSpec description for `report_agent_job_result` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-request-permissions-description.md` (**12** tk) — Inline ToolSpec description for `request_permissions` resolved from a `let description = …` binding (sub-kind `let_unresolved`). Pass 1.7 (M9).
+- **NEW:** `tool-request-user-input-description.md` (**12** tk) — Inline ToolSpec description for `request_user_input` resolved from a `let description = …` binding (sub-kind `let_unresolved`). Pass 1.7 (M9).
+- **NEW:** `tool-resume-agent-description.md` (**18** tk) — Inline ToolSpec description for `resume_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-send-input-description.md` (**41** tk) — Inline ToolSpec description for `send_input` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-send-message-description.md` (**22** tk) — Inline ToolSpec description for `send_message` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-shell-command-description.md` (**227** tk) — Inline ToolSpec description for `shell_command` resolved from a `let description = …` binding (sub-kind `cfg_conditional`). Pass 1.7 (M9).
+- **NEW:** `tool-shell-description.md` (**333** tk) — Inline ToolSpec description for `shell` resolved from a `let description = …` binding (sub-kind `cfg_conditional`). Pass 1.7 (M9).
+- **NEW:** `tool-spawn-agent-description-v2.md` (**20** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description_v2(...)`. Body is a placeholder; resolving the helper is a fo…
+- **NEW:** `tool-spawn-agent-description.md` (**18** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description(...)`. Body is a placeholder; resolving the helper is a follo…
+- **NEW:** `tool-spawn-agents-on-csv-description.md` (**82** tk) — Inline ToolSpec description for `spawn_agents_on_csv` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-test-sync-tool-description.md` (**10** tk) — Inline ToolSpec description for `test_sync_tool` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-tool-suggest-description.md` (**451** tk) — Inline ToolSpec description for `tool_suggest` resolved from a `let description = …` binding (sub-kind `let_literal`). Pass 1.7 (M9).
+- **NEW:** `tool-update-goal-description.md` (**107** tk) — Inline ToolSpec description for `update_goal` (literal `static_raw`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-update-plan-description.md` (**35** tk) — Inline ToolSpec description for `update_plan` (literal `static_raw`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-view-image-description.md` (**36** tk) — Inline ToolSpec description for `view_image` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-wait-agent-description-v2.md` (**50** tk) — Inline ToolSpec description for `wait_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-wait-agent-description.md` (**46** tk) — Inline ToolSpec description for `wait_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
+- **NEW:** `tool-write-stdin-description.md` (**13** tk) — Inline ToolSpec description for `write_stdin` (literal `static_plain`). Captured by Pass 1.7 (M9).
 
 ## `prompts/memory/`
 

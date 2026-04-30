@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from .categorizer import categorize
 from .frontmatter import render as render_frontmatter
 from .pass1_5_allowlist import AllowListCapture
+from .pass1_7_toolspec import ToolSpecCapture
 from .pass1_autoinclude import Candidate
 from .pass1_fragments import FragmentCapture
 from .pass1_models import ModelEntry
@@ -20,6 +22,7 @@ class EmitResult:
     orphans: list[Candidate]       # candidates with no matching category rule
     allowlist_written: int = 0     # count of allow-list captures emitted
     fragment_written: int = 0      # count of ContextualUserFragment captures emitted
+    toolspec_written: int = 0      # count of inline ToolSpec captures emitted (Pass 1.7)
 
 
 def _kind_label(file_path: Path) -> str:
@@ -61,6 +64,7 @@ def emit(
     model_entries: list[ModelEntry],
     allowlist_captures: list[AllowListCapture],
     fragment_captures: list[FragmentCapture],
+    toolspec_captures: list[ToolSpecCapture],
     out_root: Path,
     codex_version: str,
     codex_commit: str,
@@ -249,9 +253,104 @@ def emit(
         written.append(out_path.relative_to(out_root))
         fragment_written += 1
 
+    # ========== ToolSpec captures (Pass 1.7 — M9) ==========
+    toolspec_written = 0
+    # Skip captures whose body is byte-identical to an already-emitted
+    # allow-list capture (e.g. const-ref ToolSpec descriptions whose const
+    # is curated under Pass 1.5 with a hand-picked filename).
+    allowlist_bodies = {
+        cap.body.strip() for cap in allowlist_captures if cap.body.strip()
+    }
+    safe_name_rx = re.compile(r"[^a-z0-9]+")
+    for tc in toolspec_captures:
+        body = tc.description
+        if not body or not body.strip():
+            continue
+        if body.strip() in allowlist_bodies:
+            # Already emitted via Pass 1.5 with a curated filename.
+            continue
+        slug = safe_name_rx.sub("-", tc.tool_name.lower()).strip("-")
+        filename = f"tool-{slug}-description"
+        out_path = out_root / "prompts" / "tool" / f"{filename}.md"
+        # Avoid filename collisions: append an index if a previous emit (e.g.
+        # two ToolSpecs sharing the same tool_name like wait_agent v1/v2)
+        # already wrote this path. `written` stores paths relative to out_root.
+        rel_path = out_path.relative_to(out_root)
+        suffix = 1
+        while rel_path in written:
+            suffix += 1
+            out_path = out_root / "prompts" / "tool" / f"{filename}-v{suffix}.md"
+            rel_path = out_path.relative_to(out_root)
+        token_count = count_o200k_base(body)
+        callsite = f"{tc.file_rel}:{tc.line}"
+
+        extra: dict = {
+            "source": {
+                "tool_name": tc.tool_name,
+                "description_kind": tc.description_kind,
+            }
+        }
+        if tc.let_binding_kind:
+            extra["source"]["let_binding_kind"] = tc.let_binding_kind
+        if tc.fn_callee:
+            extra["source"]["resolves_via"] = tc.fn_callee
+
+        # Description (frontmatter-side narration) — explain what the file
+        # contains so a reader can quickly tell whether it was statically
+        # resolved or marked dynamic.
+        if tc.description_kind in ("static_plain", "static_raw"):
+            desc = (
+                f"Inline ToolSpec description for `{tc.tool_name}` "
+                f"(literal `{tc.description_kind}`). Captured by Pass 1.7 (M9)."
+            )
+        elif tc.description_kind == "const_ref":
+            desc = (
+                f"Inline ToolSpec description for `{tc.tool_name}` resolved from "
+                f"the `{tc.fn_callee}` string constant. Captured by Pass 1.7 (M9)."
+            )
+        elif tc.description_kind == "cfg_conditional":
+            desc = (
+                f"Inline ToolSpec description for `{tc.tool_name}` — `cfg!(windows)` "
+                "conditional. Both branches captured side-by-side. Pass 1.7 (M9)."
+            )
+        elif tc.description_kind == "let_binding":
+            desc = (
+                f"Inline ToolSpec description for `{tc.tool_name}` resolved from a "
+                f"`let description = …` binding (sub-kind `{tc.let_binding_kind}`). "
+                "Pass 1.7 (M9)."
+            )
+        elif tc.description_kind == "fn_call":
+            desc = (
+                f"Inline ToolSpec description for `{tc.tool_name}` — built dynamically "
+                f"by `{tc.fn_callee}(...)`. Body is a placeholder; resolving the helper "
+                "is a follow-up. Pass 1.7 (M9)."
+            )
+        else:
+            desc = f"Inline ToolSpec description for `{tc.tool_name}` (Pass 1.7, M9)."
+
+        fm = render_frontmatter(
+            name=f"Tool: {tc.tool_name} description",
+            category="tool",
+            codex_version=codex_version,
+            codex_commit=codex_commit,
+            source_path=Path("codex-rs") / tc.file_rel,
+            source_kind="rust_toolspec_inline",
+            callsite=callsite,
+            extraction_pass=1.7,
+            extraction_method="rust_toolspec_inline",
+            tokens_o200k_base=token_count,
+            description=desc,
+            extra=extra,
+        )
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(fm + body + ("\n" if not body.endswith("\n") else ""))
+        written.append(out_path.relative_to(out_root))
+        toolspec_written += 1
+
     return EmitResult(
         written=written,
         orphans=orphans,
         allowlist_written=allowlist_written,
         fragment_written=fragment_written,
+        toolspec_written=toolspec_written,
     )
