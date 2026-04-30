@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 132
+  o200k_base: 137
 description: '`send_message` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "send_message",
@@ -36,3 +37,4 @@ description: '`send_message` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

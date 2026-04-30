@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 160
+  o200k_base: 165
 description: '`followup_task` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "followup_task",
@@ -36,3 +37,4 @@ description: '`followup_task` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

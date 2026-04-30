@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 124
+  o200k_base: 129
 description: '`close_agent` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "close_agent",
@@ -32,3 +33,4 @@ description: '`close_agent` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

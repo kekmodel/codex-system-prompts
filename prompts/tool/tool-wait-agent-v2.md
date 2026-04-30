@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 98
+  o200k_base: 103
 description: '`wait_agent` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "wait_agent",
@@ -27,3 +28,4 @@ description: '`wait_agent` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

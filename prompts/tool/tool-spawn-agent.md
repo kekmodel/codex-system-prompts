@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 878
+  o200k_base: 883
 description: '`spawn_agent` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "spawn_agent",
@@ -27,3 +28,4 @@ description: '`spawn_agent` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

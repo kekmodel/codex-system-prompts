@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 133
+  o200k_base: 138
 description: '`request_permissions` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "request_permissions",
@@ -32,3 +33,4 @@ description: '`request_permissions` ToolSpec.'
     "additionalProperties": false
   }
 }
+```

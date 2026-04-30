@@ -4,7 +4,7 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+7,457 tokens_
+_+7,627 tokens_
 
 Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 37, MODIFIED: 18, MOVED: 0, REMOVED: 0.
 
@@ -32,40 +32,40 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 
 ## `prompts/tool/`
 
-- **NEW:** `tool-apply-patch.md` (**856** tk) — `apply_patch` ToolSpec.
-- **NEW:** `tool-close-agent-v2.md` (**124** tk) — `close_agent` ToolSpec.
-- **NEW:** `tool-close-agent.md` (**120** tk) — `close_agent` ToolSpec.
-- **NEW:** `tool-create-goal.md` (**188** tk) — `create_goal` ToolSpec.
-- **NEW:** `tool-exec-command-unix.md` (**311** tk) — `exec_command` ToolSpec.
-- **NEW:** `tool-exec-command-windows.md` (**315** tk) — `exec_command` ToolSpec.
-- **NEW:** `tool-followup-task.md` (**160** tk) — `followup_task` ToolSpec.
-- **NEW:** `tool-get-goal.md` (**72** tk) — `get_goal` ToolSpec.
-- **NEW:** `tool-list-agents.md` (**110** tk) — `list_agents` ToolSpec.
-- **NEW:** `tool-list-dir.md` (**190** tk) — `list_dir` ToolSpec.
-- **NEW:** `tool-list-mcp-resource-templates.md` (**172** tk) — `list_mcp_resource_templates` ToolSpec.
-- **NEW:** `tool-list-mcp-resources.md` (**161** tk) — `list_mcp_resources` ToolSpec.
-- **NEW:** `tool-read-mcp-resource.md` (**147** tk) — `read_mcp_resource` ToolSpec.
-- **NEW:** `tool-report-agent-job-result.md` (**159** tk) — `report_agent_job_result` ToolSpec.
-- **NEW:** `tool-request-permissions.md` (**133** tk) — `request_permissions` ToolSpec.
-- **NEW:** `tool-request-user-input.md` (**226** tk) — `request_user_input` ToolSpec.
-- **NEW:** `tool-resume-agent.md` (**92** tk) — `resume_agent` ToolSpec.
-- **NEW:** `tool-send-input.md` (**197** tk) — `send_input` ToolSpec.
-- **NEW:** `tool-send-message.md` (**132** tk) — `send_message` ToolSpec.
-- **NEW:** `tool-shell-command-unix.md` (**206** tk) — `shell_command` ToolSpec.
-- **NEW:** `tool-shell-command-windows.md` (**345** tk) — `shell_command` ToolSpec.
-- **NEW:** `tool-shell-unix.md` (**174** tk) — `shell` ToolSpec.
-- **NEW:** `tool-shell-windows.md` (**379** tk) — `shell` ToolSpec.
-- **NEW:** `tool-spawn-agent-v2.md` (**313** tk) — `spawn_agent` ToolSpec.
-- **NEW:** `tool-spawn-agent.md` (**878** tk) — `spawn_agent` ToolSpec.
-- **NEW:** `tool-spawn-agents-on-csv.md` (**374** tk) — `spawn_agents_on_csv` ToolSpec.
-- **NEW:** `tool-test-sync-tool.md` (**211** tk) — `test_sync_tool` ToolSpec.
-- **NEW:** `tool-tool-suggest.md` (**657** tk) — `tool_suggest` ToolSpec.
-- **NEW:** `tool-update-goal.md` (**160** tk) — `update_goal` ToolSpec.
-- **NEW:** `tool-update-plan.md` (**118** tk) — `update_plan` ToolSpec.
-- **NEW:** `tool-view-image.md` (**191** tk) — `view_image` ToolSpec.
-- **NEW:** `tool-wait-agent-v2.md` (**98** tk) — `wait_agent` ToolSpec.
-- **NEW:** `tool-wait-agent.md` (**94** tk) — `wait_agent` ToolSpec.
-- **NEW:** `tool-write-stdin.md` (**192** tk) — `write_stdin` ToolSpec.
+- **NEW:** `tool-apply-patch.md` (**861** tk) — `apply_patch` ToolSpec.
+- **NEW:** `tool-close-agent-v2.md` (**129** tk) — `close_agent` ToolSpec.
+- **NEW:** `tool-close-agent.md` (**125** tk) — `close_agent` ToolSpec.
+- **NEW:** `tool-create-goal.md` (**193** tk) — `create_goal` ToolSpec.
+- **NEW:** `tool-exec-command-unix.md` (**316** tk) — `exec_command` ToolSpec.
+- **NEW:** `tool-exec-command-windows.md` (**320** tk) — `exec_command` ToolSpec.
+- **NEW:** `tool-followup-task.md` (**165** tk) — `followup_task` ToolSpec.
+- **NEW:** `tool-get-goal.md` (**77** tk) — `get_goal` ToolSpec.
+- **NEW:** `tool-list-agents.md` (**115** tk) — `list_agents` ToolSpec.
+- **NEW:** `tool-list-dir.md` (**195** tk) — `list_dir` ToolSpec.
+- **NEW:** `tool-list-mcp-resource-templates.md` (**177** tk) — `list_mcp_resource_templates` ToolSpec.
+- **NEW:** `tool-list-mcp-resources.md` (**166** tk) — `list_mcp_resources` ToolSpec.
+- **NEW:** `tool-read-mcp-resource.md` (**152** tk) — `read_mcp_resource` ToolSpec.
+- **NEW:** `tool-report-agent-job-result.md` (**164** tk) — `report_agent_job_result` ToolSpec.
+- **NEW:** `tool-request-permissions.md` (**138** tk) — `request_permissions` ToolSpec.
+- **NEW:** `tool-request-user-input.md` (**231** tk) — `request_user_input` ToolSpec.
+- **NEW:** `tool-resume-agent.md` (**97** tk) — `resume_agent` ToolSpec.
+- **NEW:** `tool-send-input.md` (**202** tk) — `send_input` ToolSpec.
+- **NEW:** `tool-send-message.md` (**137** tk) — `send_message` ToolSpec.
+- **NEW:** `tool-shell-command-unix.md` (**211** tk) — `shell_command` ToolSpec.
+- **NEW:** `tool-shell-command-windows.md` (**350** tk) — `shell_command` ToolSpec.
+- **NEW:** `tool-shell-unix.md` (**179** tk) — `shell` ToolSpec.
+- **NEW:** `tool-shell-windows.md` (**384** tk) — `shell` ToolSpec.
+- **NEW:** `tool-spawn-agent-v2.md` (**318** tk) — `spawn_agent` ToolSpec.
+- **NEW:** `tool-spawn-agent.md` (**883** tk) — `spawn_agent` ToolSpec.
+- **NEW:** `tool-spawn-agents-on-csv.md` (**379** tk) — `spawn_agents_on_csv` ToolSpec.
+- **NEW:** `tool-test-sync-tool.md` (**216** tk) — `test_sync_tool` ToolSpec.
+- **NEW:** `tool-tool-suggest.md` (**662** tk) — `tool_suggest` ToolSpec.
+- **NEW:** `tool-update-goal.md` (**165** tk) — `update_goal` ToolSpec.
+- **NEW:** `tool-update-plan.md` (**123** tk) — `update_plan` ToolSpec.
+- **NEW:** `tool-view-image.md` (**196** tk) — `view_image` ToolSpec.
+- **NEW:** `tool-wait-agent-v2.md` (**103** tk) — `wait_agent` ToolSpec.
+- **NEW:** `tool-wait-agent.md` (**99** tk) — `wait_agent` ToolSpec.
+- **NEW:** `tool-write-stdin.md` (**197** tk) — `write_stdin` ToolSpec.
 
 ## `prompts/memory/`
 

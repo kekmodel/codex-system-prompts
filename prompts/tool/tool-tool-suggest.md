@@ -14,9 +14,10 @@ extraction:
   method: rust_toolspec_inline
 variables: []
 tokens:
-  o200k_base: 657
+  o200k_base: 662
 description: '`tool_suggest` ToolSpec.'
 ---
+```json
 {
   "type": "function",
   "name": "tool_suggest",
@@ -44,3 +45,4 @@ description: '`tool_suggest` ToolSpec.'
     "additionalProperties": false
   }
 }
+```
