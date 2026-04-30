@@ -119,3 +119,39 @@ category = "agent"
 filename = "agent-role-worker"
 description = "Worker role description — inline string in role.rs DEFAULT_ROLE_CONFIG table."
 reviewed_at = "ebdf3a878c"
+
+# ============ models-manager/src/model_info.rs — gpt-5.2-codex personality ============
+# These three private consts are concatenated into the gpt-5.2-codex model's
+# instructions_template (line 107) and personality variables (lines 111-112)
+# at runtime. The slug `gpt-5.2-codex` is not in models.json (currently only
+# six active slugs: gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.3-codex, gpt-5.2,
+# codex-auto-review), so today these strings reach no live model. Captured
+# under `orphan/` per SPEC §1.3 for the same reason `core/templates/personalities/*`
+# is — preserved as historical/inactive but still mirrored.
+
+[[entry]]
+kind = "rust_const_str"
+file = "models-manager/src/model_info.rs"
+symbol = "DEFAULT_PERSONALITY_HEADER"
+category = "orphan"
+filename = "orphan-models-manager-default-personality-header"
+description = "GPT-5 default personality header consumed by gpt-5.2-codex / exp-codex-personality slug branch in `local_personality_messages_for_slug` (model_info.rs:103-117). Inactive: the slug is not in models.json today."
+reviewed_at = "8148b7b1f8"
+
+[[entry]]
+kind = "rust_const_str"
+file = "models-manager/src/model_info.rs"
+symbol = "LOCAL_FRIENDLY_TEMPLATE"
+category = "orphan"
+filename = "orphan-models-manager-local-friendly-template"
+description = "`personality_friendly` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the friendly personality. Inactive today (slug not registered)."
+reviewed_at = "8148b7b1f8"
+
+[[entry]]
+kind = "rust_const_str"
+file = "models-manager/src/model_info.rs"
+symbol = "LOCAL_PRAGMATIC_TEMPLATE"
+category = "orphan"
+filename = "orphan-models-manager-local-pragmatic-template"
+description = "`personality_pragmatic` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the pragmatic personality. Inactive today (slug not registered)."
+reviewed_at = "8148b7b1f8"

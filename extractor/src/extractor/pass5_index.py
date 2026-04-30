@@ -323,22 +323,22 @@ def _render_coverage_section(verify_report: VerifyReport) -> str:
         out.append("❌ **Pass 4 verification: FAILED**")
     out.append("")
     out.append(
-        f"- Layer A unmapped placeholders: **{verify_report.layer_a_unmapped}**"
+        f"- Layer A unmapped placeholders: **{len(verify_report.placeholders_unmapped)}**"
     )
     out.append(
-        f"- Layer B autoinclude misses:    **{verify_report.layer_b_autoinclude_miss}**"
+        f"- Layer B autoinclude misses:    **{len(verify_report.autoinclude_missing)}**"
     )
     out.append(
-        f"- Layer B model-fanout misses:   **{verify_report.layer_b_model_miss}**"
+        f"- Layer B model-fanout misses:   **{len(verify_report.models_missing)}**"
     )
     out.append(
-        f"- Layer B allow-list misses:     **{verify_report.layer_b_allowlist_miss}**"
+        f"- Layer B allow-list misses:     **{len(verify_report.allowlist_missing)}**"
     )
     out.append(
-        f"- Frontmatter schema fails:      **{verify_report.frontmatter_fails}**"
+        f"- Frontmatter schema fails:      **{len(verify_report.frontmatter_invalid)}**"
     )
     out.append(
-        f"- Token-count drifts:            **{verify_report.token_drifts}**"
+        f"- Token-count drifts:            **{len(verify_report.token_drift)}**"
     )
     out.append(AUTOGEN_END)
     return "\n".join(out)
@@ -516,16 +516,44 @@ _FORMAT_MARKER = "## Format"
 _PLACEHOLDER = "_Awaiting first extraction. M6 will populate the first entry._"
 
 
-def _insert_changelog_entry(text: str, entry: str) -> str:
+def _strip_existing_top_entry(text: str, codex_version: str) -> str:
     """
-    Always prepend `entry` so it becomes the newest top entry.
+    If the topmost `# [rust-v...]` entry is for codex_version, strip it out
+    (along with its trailing `---` separator). Lets re-extraction at the
+    same tag overwrite its previous entry instead of accumulating duplicates.
+    """
+    first = _FIRST_ENTRY_RX.search(text)
+    if not first:
+        return text
+    header_line_end = text.find("\n", first.start())
+    header_line = text[first.start():header_line_end] if header_line_end != -1 else text[first.start():]
+    if f"[{codex_version}]" not in header_line:
+        return text
 
-    Insertion priority:
+    # Find the end of this entry: the next `# [rust-v...]` header or `## Format`
+    # marker. Include the `---\n\n` separator that sits between this entry and
+    # the next one so we don't leave a stray separator behind.
+    next_entry = _FIRST_ENTRY_RX.search(text, pos=first.end())
+    fmt_idx = text.find(_FORMAT_MARKER, first.end())
+    candidates = [c for c in (next_entry.start() if next_entry else -1, fmt_idx) if c != -1]
+    cut_end = min(candidates) if candidates else len(text)
+    return text[:first.start()] + text[cut_end:]
+
+
+def _insert_changelog_entry(text: str, codex_version: str, entry: str) -> str:
+    """
+    Idempotent prepend: if a previous entry for the same `codex_version` is
+    already at the top, strip it first (re-extraction overwrites itself).
+    Then insert `entry` so it becomes the newest top entry.
+
+    Insertion priority for the prepend step:
       1. If the M1 placeholder is still present, replace it (baseline).
       2. Else, insert immediately before the first existing `# [rust-v...]` entry.
       3. Else (no entries yet, no placeholder), insert before `## Format`.
       4. Else, append to file end.
     """
+    text = _strip_existing_top_entry(text, codex_version)
+
     if _PLACEHOLDER in text:
         return text.replace(_PLACEHOLDER, entry, 1)
 
@@ -576,7 +604,7 @@ def update_changelog(
             skipped_predecessors=skipped_predecessors,
         )
 
-    text = _insert_changelog_entry(text, entry)
+    text = _insert_changelog_entry(text, codex_version, entry)
     cl.write_text(text)
 
 

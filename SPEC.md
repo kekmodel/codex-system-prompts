@@ -1,7 +1,16 @@
-# codex-system-prompts — SPEC v0.8
+# codex-system-prompts — SPEC v0.9
 
-> Status: **M1–M8 complete; M5c skipped (optional). Mirror is live at `rust-v0.126.0-alpha.12`; auto-mirror workflow handles forward updates.**
-> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29) → v0.6 §2.3 M5 split (2026-04-29) → v0.7 §11 roadmap reflecting actual completion (2026-04-29) → v0.8 M6–M8 closure (2026-04-30).
+> Status: **M1–M8 complete; M5c skipped (optional). M9 (ToolSpec coverage expansion) in progress. Mirror is live at `rust-v0.128.0-alpha.1`; auto-mirror workflow handles forward updates.**
+> Authoring: v0.1 draft (2026-04-29) → v0.2 §10 resolutions (2026-04-29) → v0.3 review-driven hardening (2026-04-29) → v0.4 cosmetic renumber (2026-04-29) → v0.5 §2.5 Layer A reframe (2026-04-29) → v0.6 §2.3 M5 split (2026-04-29) → v0.7 §11 roadmap reflecting actual completion (2026-04-29) → v0.8 M6–M8 closure (2026-04-30) → v0.9 ToolSpec coverage gap (M9) (2026-05-01).
+
+### Change log (v0.8 → v0.9) — ToolSpec coverage gap
+
+A two-stage audit (`tools/src/` first, then the rest of `codex-rs/` cross-referenced against the captured-source list) revealed that the M2–M5b extractor only handled the *named const* shape of tool descriptions (e.g. `pub const APPLY_PATCH_JSON_TOOL_DESCRIPTION: &str = "..."`). The *inline-struct-field* shape used by ~22 tools in `tools/src/*.rs` was completely missed, as were the ~100+ per-parameter `JsonSchema` description strings, the `format!`/`writeln!` description-builder helpers, and the `cfg!(windows)` conditional descriptions.
+
+- §1.1: "Programmatic tool descriptions" item rewritten as four sub-shapes — (a) inline ToolSpec struct fields, (b) JsonSchema parameter descriptions, (c) format!/writeln! helpers, (d) cfg!(windows) conditionals — with explicit tool-name list for (a).
+- §2.2: added Pass 1.6 (ContextualUserFragment auto-discovery — already in code as of M5b but never listed in the pipeline table) and new Pass 1.7 (ToolSpec auto-discovery, M9).
+- §1.1: added explicit allow-list entry for `models-manager/src/model_info.rs::{DEFAULT_PERSONALITY_HEADER, LOCAL_FRIENDLY_TEMPLATE, LOCAL_PRAGMATIC_TEMPLATE}`. These reach `gpt-5.2-codex` / `exp-codex-personality` slug branches in `local_personality_messages_for_slug`; neither slug is in `models.json` today, so they're captured under `prompts/orphan/` per §1.3 (same precedent as `core/templates/personalities/*`).
+- §11: added **M9 — ToolSpec coverage expansion** (Pass 1.7).
 
 ### Change log (v0.7 → v0.8) — M6–M8 closure
 
@@ -97,7 +106,11 @@ A prompt is in scope iff it is **reachable from a normal Codex session** (see §
 - **Per-model `base_instructions`** and `model_messages.instructions_template` from `codex-rs/models-manager/models.json` (~13 model slugs + fallback).
 - **Markdown templates loaded via `include_str!`**: `review_prompt.md`, `apply_patch_tool_instructions.md`, `templates/compact/*.md`, `templates/realtime/*.md`, `templates/goals/*.md`, `core/src/context/prompts/permissions/**/*.md`, `core/src/context/prompts/realtime/*.md`, `memories/{read,write}/templates/**/*.md`, `tui/prompt_for_init_command.md`, `core/hierarchical_agents_message.md`, `core/src/guardian/policy*.md`.
 - **Inline raw-string prompts** (`r#"..."#`) reachable at runtime: `agent/role.rs` (worker/explorer/awaiter role descriptions), `guardian/prompt.rs::guardian_output_contract_prompt`, `code-mode/src/description.rs` constants (`EXEC_DESCRIPTION_TEMPLATE`, `WAIT_DESCRIPTION_TEMPLATE`, `MCP_TYPESCRIPT_PREAMBLE`, `CODE_MODE_ONLY_PREFACE`, `DEFERRED_NESTED_TOOLS_GUIDANCE`), `tools/src/apply_patch_tool.rs::APPLY_PATCH_JSON_TOOL_DESCRIPTION`, `tools/src/agent_tool.rs::SPAWN_AGENT_MODEL_OVERRIDE_DESCRIPTION`.
-- **Programmatic tool descriptions** built via `format!`/`writeln!` in `tools/src/{tool_discovery,local_tool,request_user_input_tool,goal_tool,plan_tool}.rs` and `core/src/agent/role.rs::spawn_tool_spec::build`. Captured as **template + default rendering** (§2.3).
+- **Tool descriptions** in `codex-rs/tools/src/*.rs`. Four sub-shapes, all in scope:
+  - **(a) Inline `ToolSpec { name: "X", description: "...", parameters: ... }`** field strings — ~22 tools including `shell`, `exec_command`, `write_stdin`, `shell_command`, `list_dir`, `view_image`, `update_plan`, `send_input`, `send_message`, `wait_agent` (v1/v2), `list_agents`, `close_agent` (v1/v2), `followup_task`, `resume_agent`, `spawn_agents_on_csv`, `report_agent_job_result`, `apply_patch` freeform, `get_goal`, `update_goal`, `list_mcp_resources`, `list_mcp_resource_templates`, `read_mcp_resource`, `request_user_input`. (M9 — see §2.2 Pass 1.7.)
+  - **(b) Per-parameter `JsonSchema` property descriptions** inside each tool's `parameters` schema — ~100+ across all tools. The model reads each `description` field on each parameter. (M9.)
+  - **(c) Helper functions** that build descriptions via `format!`/`writeln!` (`spawn_agent_tool_description`, `spawn_agent_tool_description_v2`, `spawn_agent_models_description`, `request_user_input_tool_description`, etc.) — captured as **template + default rendering** (§2.3) with placeholders preserved.
+  - **(d) `cfg!(windows) { ... } else { ... }` conditional** descriptions in `local_tool.rs` for `exec_command` / `shell` / `shell_command` — both branches captured (rendered as side-by-side fragments in the same captured file).
 - **TOML-defined built-in agents**: `core/src/agent/builtins/{explorer,awaiter}.toml` — extract `developer_instructions` field.
 - **ContextualUserFragment wrappers**: ~25 impls in `core/src/context/*.rs`. Capture START/END markers + body-builder template.
 - **Collaboration mode templates**: `collaboration-mode-templates/templates/{default,execute,plan,pair_programming}.md`.
@@ -171,6 +184,8 @@ Implemented in `extractor/` (Mixed Python orchestrator + Rust shim per §10.7).
 |---|---|---|
 | **1. Auto-include enumeration** | Walk shipping `.rs` files for `include_str!`/`include_bytes!`/JSON-loaded `models.json` references. **No string-size threshold** (v0.3: removed arbitrary 80-char rule, T2.1). | Auto-include candidate list. |
 | **1.5 Allow-list resolution** | Load `extractor/allow_list.toml`. For each entry, locate the symbol in source and capture content (inline string for constants; shim invocation for programmatic builders, see §2.3). | Allow-list candidate list. |
+| **1.6 ContextualUserFragment auto-discovery** | Walk shipping `.rs` files for `impl ContextualUserFragment for <Struct>` blocks; capture START/END marker constants and `body()` template body. (M5b.) | ContextualUserFragment candidate list. |
+| **1.7 ToolSpec auto-discovery** *(M9 — see §1.1 (a)–(d))* | Walk `codex-rs/tools/src/*.rs` (and `core/src/agent/role.rs::spawn_tool_spec::build`) for inline `ToolSpec { name: ..., description: ..., parameters: ... }` blocks. Per block, emit a captured prompt for: the description (resolving fn-call helpers and `cfg!(windows)` conditionals to side-by-side fragments) plus one entry per `JsonSchema` property description in `parameters`. | ToolSpec candidate list. |
 | **2. Denylist filter** | Apply `extractor/denylist.toml`. Drop matches. | Filtered candidate list. |
 | **3. Categorize & emit** | Map each kept prompt to a Codex-native category (§4). Render frontmatter + body. Write to category folder. | `prompts/**/*.md`. |
 | **4. Verification** | Run §2.5 two-layer verification (accuracy + completeness). | CI report. |
@@ -603,7 +618,7 @@ All decisions locked as of v0.2 (2026-04-29). Implementation may proceed.
 
 ## 11. Implementation roadmap (live status)
 
-Updated as of v0.8 — all baseline milestones complete. Effort column shows original estimate; "Actual" reflects what was delivered.
+Updated as of v0.9 — baseline (M1–M8) complete; M9 in progress. Effort column shows original estimate; "Actual" reflects what was delivered.
 
 | Milestone | Deliverable | Status | Commit | Original est. | Actual |
 |---|---|---|---|---|---|
@@ -618,9 +633,12 @@ Updated as of v0.8 — all baseline milestones complete. Effort column shows ori
 | **M6** | Pass 5 — README + CHANGELOG generation (Piebald-style index) | ✅ done | `07e4fa2` | 0.5d | <0.5d |
 | **M7** | GH Action automation (per §10.8) | ✅ done | `43e86e4` | 0.5d | <0.5d |
 | **M8** | First public snapshot at current Codex tag → push | ✅ done | (this commit; mirror tag `rust-v0.126.0-alpha.12` on `origin`) | 0.25d | <0.25d |
+| **M9** | ToolSpec coverage expansion (Pass 1.7) — close the inline-ToolSpec / JsonSchema-parameter / format!-helper gap revealed by the v0.9 audit (§1.1 (a)–(d)) | ⏳ in progress | — | 1.5d | — |
 
-**Original total**: ~5–6 days, risk concentrated in M5.
+**Original total (M0–M8)**: ~5–6 days, risk concentrated in M5.
 **Actual M0–M8**: hours of focused work across two days. M5c skip eliminated the highest-risk leg; static parsing in M5a/M5b covered every deferred-M5 placeholder; M6/M7 came in well under estimate because Pass 5's diff logic reused the verify-pass token accounting.
+
+**M9 was not in the original roadmap** — it was added in v0.9 after the audit. The implementation gap was concealed by the baseline-only test surface: every alpha.12 file was new, so no diff against a prior snapshot exposed the fact that the extractor only handled the named-const shape of tool descriptions.
 
 ### Forward-mode (post-M8)
 
