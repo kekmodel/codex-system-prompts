@@ -1,13 +1,13 @@
 ---
 name: 'Mode: mode-goal-budget-limit'
 category: mode
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/core/templates/goals/budget_limit.md
   kind: include_str
   reached_from:
-  - core/src/goals.rs:61
+  - goals.rs:61
 extraction:
   pass: 1
   method: file

@@ -1,19 +1,19 @@
 ---
 name: 'Mode: mode-collab-default'
 category: mode
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/collaboration-mode-templates/templates/default.md
   kind: include_str
   reached_from:
-  - collaboration-mode-templates/src/lib.rs:2
+  - lib.rs:2
 extraction:
   pass: 1
   method: file
 variables: []
 tokens:
-  o200k_base: 101
+  o200k_base: 173
 description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/collaboration-mode-templates/templates/default.md`.
   Category: mode. Description will be refined at M5 review.'
 ---
@@ -25,6 +25,6 @@ Your active mode changes only when new developer instructions with a different `
 
 ## request_user_input availability
 
-{{REQUEST_USER_INPUT_AVAILABILITY}}
+Use the `request_user_input` tool only when it is listed in the available tools for this turn.
 
-{{ASKING_QUESTIONS_GUIDANCE}}
+In Default mode, strongly prefer making reasonable assumptions and executing the user's request rather than stopping to ask questions. If you absolutely must ask a question because the answer cannot be discovered from local context and a reasonable assumption would be risky, ask the user directly with a concise plain-text question. Never write a multiple choice question as a textual assistant message.

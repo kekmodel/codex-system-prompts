@@ -1,13 +1,13 @@
 ---
 name: 'Permission: permission-sandbox-danger-full-access'
 category: permission
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/core/src/context/prompts/permissions/sandbox_mode/danger_full_access.md
   kind: include_str
   reached_from:
-  - core/src/context/permissions_instructions.rs:29
+  - permissions_instructions.rs:29
 extraction:
   pass: 1
   method: file

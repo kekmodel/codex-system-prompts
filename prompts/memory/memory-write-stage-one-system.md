@@ -1,13 +1,13 @@
 ---
 name: 'Memory: memory-write-stage-one-system'
 category: memory
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/memories/write/templates/memories/stage_one_system.md
   kind: include_str
   reached_from:
-  - memories/write/src/lib.rs:89
+  - lib.rs:89
 extraction:
   pass: 1
   method: file

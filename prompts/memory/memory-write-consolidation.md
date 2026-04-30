@@ -1,13 +1,13 @@
 ---
 name: 'Memory: memory-write-consolidation'
 category: memory
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/memories/write/templates/memories/consolidation.md
   kind: include_str
   reached_from:
-  - memories/write/src/prompts.rs:12
+  - prompts.rs:12
 extraction:
   pass: 1
   method: file
@@ -174,7 +174,7 @@ Incremental update and forgetting mechanism:
 
 - Use the git-style diff in `{{ phase2_workspace_diff_file }}` to identify relevant changed
   sections and deleted inputs.
-- Every changes in `{{ phase2_workspace_diff_file }}` are authoritative and must propagated and consolidated. If a 
+- Every changes in `{{ phase2_workspace_diff_file }}` are authoritative and must propagated and consolidated. If a
   changes appears to be randomly placed in the files, it is probably a user change and you shouldn't just drop it.
   Make sure to add it to the overall memories consolidation
 - Do not open raw sessions / original rollout transcripts.

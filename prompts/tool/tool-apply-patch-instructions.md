@@ -1,13 +1,13 @@
 ---
 name: 'Tool: tool-apply-patch-instructions'
 category: tool
-codex_version: rust-v0.126.0-alpha.12
-codex_commit: ebdf3a878c8c7253504599bd384cd421a4e548c1
+codex_version: rust-v0.128.0-alpha.1
+codex_commit: 8148b7b1f8660e464661743587f754471ae60868
 source:
   path: codex-rs/apply-patch/apply_patch_tool_instructions.md
   kind: include_str
   reached_from:
-  - apply-patch/src/lib.rs:33
+  - lib.rs:33
 extraction:
   pass: 1
   method: file
