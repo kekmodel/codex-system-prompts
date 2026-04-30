@@ -4,13 +4,31 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+7,153 tokens_
+_+6,210 tokens_
 
-Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 35, MODIFIED: 3, MOVED: 0, REMOVED: 0.
+Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 35, MODIFIED: 18, MOVED: 0, REMOVED: 0.
 
 ## `prompts/mode/`
 
 - `mode-collab-default.md` — token Δ +72 (101 → 173).
+
+## `prompts/context-fragment/`
+
+- `context-fragment-approved-command-prefix-saved.md` — token Δ +0 (6 → 6).
+- `context-fragment-apps-instructions.md` — token Δ +0 (143 → 143).
+- `context-fragment-available-plugins-instructions.md` — token Δ −332 (332 → 0).
+- `context-fragment-available-skills-instructions.md` — token Δ −30 (30 → 0).
+- `context-fragment-collaboration-mode-instructions.md` — token Δ −18 (18 → 0).
+- `context-fragment-environment-context.md` — token Δ −335 (335 → 0).
+- `context-fragment-guardian-followup-review-reminder.md` — token Δ −89 (89 → 0).
+- `context-fragment-hook-additional-context.md` — token Δ −18 (18 → 0).
+- `context-fragment-image-generation-instructions.md` — token Δ +0 (41 → 41).
+- `context-fragment-network-rule-saved.md` — token Δ −85 (85 → 0).
+- `context-fragment-permissions-instructions.md` — token Δ −18 (26 → 8).
+- `context-fragment-plugin-instructions.md` — token Δ −18 (18 → 0).
+- `context-fragment-realtime-end-instructions.md` — token Δ +0 (5 → 5).
+- `context-fragment-realtime-start-instructions.md` — token Δ +0 (2 → 2).
+- `context-fragment-realtime-start-with-instructions.md` — token Δ +0 (2 → 2).
 
 ## `prompts/tool/`
 
@@ -53,9 +71,9 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 
 ## `prompts/orphan/`
 
-- **NEW:** `orphan-models-manager-default-personality-header.md` (**30** tk) — GPT-5 default personality header consumed by gpt-5.2-codex / exp-codex-personality slug branch in `local_personality_messages_for_slug` (model_info.rs:103-117).…
-- **NEW:** `orphan-models-manager-local-friendly-template.md` (**16** tk) — `personality_friendly` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the friendly personality. Inac…
-- **NEW:** `orphan-models-manager-local-pragmatic-template.md` (**10** tk) — `personality_pragmatic` variable body for the gpt-5.2-codex slug. Substituted into `{{ personality }}` placeholder when user picks the pragmatic personality. In…
+- **NEW:** `orphan-models-manager-default-personality-header.md` (**30** tk) — `codex-rs/models-manager/src/model_info.rs::DEFAULT_PERSONALITY_HEADER`
+- **NEW:** `orphan-models-manager-local-friendly-template.md` (**16** tk) — `codex-rs/models-manager/src/model_info.rs::LOCAL_FRIENDLY_TEMPLATE`
+- **NEW:** `orphan-models-manager-local-pragmatic-template.md` (**10** tk) — `codex-rs/models-manager/src/model_info.rs::LOCAL_PRAGMATIC_TEMPLATE`
 - `orphan-core-templates-search-tool-tool-suggest-description.md` — token Δ +17 (413 → 430).
 
 ---

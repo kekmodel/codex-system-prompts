@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 209
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/hierarchical_agents_message.md`.
-  Category: agent. Description will be refined at M5 review.'
+description: '`codex-rs/core/hierarchical_agents_message.md`'
 ---
 Files called AGENTS.md commonly appear in many places inside a container - at "/", in "~", deep within git repositories, or in any other directory; their location is not limited to version-controlled folders.
 

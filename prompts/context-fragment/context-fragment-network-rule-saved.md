@@ -12,26 +12,12 @@ source:
   role: developer
   start_marker: ''
   end_marker: ''
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 85
-description: '`NetworkRuleSaved` ContextualUserFragment from `codex-rs/core/src/context/network_rule_saved.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as function-body-source.'
+  o200k_base: 0
+description: '`NetworkRuleSaved` ContextualUserFragment.'
 ---
-```rust
-fn body(&self) -> String {
-let (action, list_name) = match self.action {
-            NetworkPolicyRuleAction::Allow => ("Allowed", "allowlist"),
-            NetworkPolicyRuleAction::Deny => ("Denied", "denylist"),
-        };
-        format!(
-            "{action} network rule saved in execpolicy ({list_name}): {}",
-            self.host
-        )
-}
-```
-

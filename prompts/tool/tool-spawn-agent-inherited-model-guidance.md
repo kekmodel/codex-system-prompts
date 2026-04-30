@@ -15,7 +15,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 33
-description: Guidance attached to spawn_agent's `model` parameter — inheritance default
-  rule.
+description: '`codex-rs/tools/src/agent_tool.rs::SPAWN_AGENT_INHERITED_MODEL_GUIDANCE`'
 ---
 Spawned agents inherit your current model by default. Omit `model` to use that preferred default; set `model` only when an explicit override is needed.

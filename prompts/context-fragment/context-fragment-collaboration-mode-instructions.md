@@ -12,19 +12,12 @@ source:
   role: developer
   start_marker: ''
   end_marker: ''
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 18
-description: '`CollaborationModeInstructions` ContextualUserFragment from `codex-rs/core/src/context/collaboration_mode_instructions.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as function-body-source.'
+  o200k_base: 0
+description: '`CollaborationModeInstructions` ContextualUserFragment.'
 ---
-```rust
-fn body(&self) -> String {
-self.instructions.clone()
-}
-```
-

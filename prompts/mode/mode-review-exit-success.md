@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 59
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/templates/review/exit_success.xml`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/templates/review/exit_success.xml`'
 ---
 <user_action>
   <context>User initiated a review task. Here's the full review output from reviewer model. User may select one or more comments to resolve.</context>

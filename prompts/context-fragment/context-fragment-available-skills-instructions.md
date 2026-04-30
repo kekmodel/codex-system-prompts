@@ -12,19 +12,12 @@ source:
   role: developer
   start_marker: ''
   end_marker: ''
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 30
-description: '`AvailableSkillsInstructions` ContextualUserFragment from `codex-rs/core/src/context/available_skills_instructions.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as function-body-source.'
+  o200k_base: 0
+description: '`AvailableSkillsInstructions` ContextualUserFragment.'
 ---
-```rust
-fn body(&self) -> String {
-render_available_skills_body(&self.skill_root_lines, &self.skill_lines)
-}
-```
-

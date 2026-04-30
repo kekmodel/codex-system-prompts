@@ -12,23 +12,15 @@ source:
   role: developer
   start_marker: <permissions instructions>
   end_marker: </permissions instructions>
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 26
-description: '`PermissionsInstructions` ContextualUserFragment from `codex-rs/core/src/context/permissions_instructions.rs`.
-  Role: ''developer''. Markers: ''<permissions instructions>'' … ''</permissions instructions>''.
-  body() captured as function-body-source.'
+  o200k_base: 8
+description: '`PermissionsInstructions` ContextualUserFragment.'
 ---
 <permissions instructions>
-
-```rust
-fn body(&self) -> String {
-self.text.clone()
-}
-```
 
 </permissions instructions>

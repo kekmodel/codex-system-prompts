@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 173
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/collaboration-mode-templates/templates/default.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/collaboration-mode-templates/templates/default.md`'
 ---
 # Collaboration Mode: Default
 

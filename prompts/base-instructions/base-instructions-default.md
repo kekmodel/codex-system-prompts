@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 4371
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/protocol/src/prompts/base_instructions/default.md`.
-  Category: base-instructions. Description will be refined at M5 review.'
+description: '`codex-rs/protocol/src/prompts/base_instructions/default.md`'
 ---
 You are a coding agent running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.
 

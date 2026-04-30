@@ -14,7 +14,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 60
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/approval_policy/on_failure.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/approval_policy/on_failure.md`'
 ---
 Approvals are your mechanism to get user consent to run shell commands without the sandbox. `approval_policy` is `on-failure`: The harness will allow all commands to run in the sandbox (if enabled), and failures will be escalated to the user for approval to run again without the sandbox.

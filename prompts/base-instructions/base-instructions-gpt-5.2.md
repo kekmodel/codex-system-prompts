@@ -13,8 +13,8 @@ extraction:
 variables: []
 tokens:
   o200k_base: 4570
-description: 'Per-model `base_instructions` for slug `gpt-5.2`, fanned out from `codex-rs/models-manager/models.json`
-  per SPEC §2.4. JSON pointer: /models/4/base_instructions.'
+description: '`models.json` /models/.../base_instructions for slug `gpt-5.2` (json
+  pointer `/models/4/base_instructions`).'
 ---
 You are GPT-5.2 running in the Codex CLI, a terminal-based coding assistant. Codex CLI is an open source project led by OpenAI. You are expected to be precise, safe, and helpful.
 

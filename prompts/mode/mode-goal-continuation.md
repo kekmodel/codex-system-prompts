@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 465
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/templates/goals/continuation.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/templates/goals/continuation.md`'
 ---
 Continue working toward the active thread goal.
 

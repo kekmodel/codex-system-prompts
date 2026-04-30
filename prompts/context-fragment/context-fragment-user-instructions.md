@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 17
-description: '`UserInstructions` ContextualUserFragment from `codex-rs/core/src/context/user_instructions.rs`.
-  Role: ''user''. Markers: ''# AGENTS.md instructions for '' … ''</INSTRUCTIONS>''.
-  body() captured as template.'
+description: '`UserInstructions` ContextualUserFragment.'
 ---
 # AGENTS.md instructions for 
 {}

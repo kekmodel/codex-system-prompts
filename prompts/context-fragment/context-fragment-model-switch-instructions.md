@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 28
-description: '`ModelSwitchInstructions` ContextualUserFragment from `codex-rs/core/src/context/model_switch_instructions.rs`.
-  Role: ''developer''. Markers: ''<model_switch>'' … ''</model_switch>''. body() captured
-  as template.'
+description: '`ModelSwitchInstructions` ContextualUserFragment.'
 ---
 <model_switch>
 

@@ -15,8 +15,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 76
-description: Preface added when code-mode is the only tool exposure (no other MCP
-  tools listed).
+description: '`codex-rs/code-mode/src/description.rs::CODE_MODE_ONLY_PREFACE`'
 ---
 Some nested MCP/app tools may be omitted from this description. They are still available on the global `tools` object and listed in `ALL_TOOLS`.
 To find one, filter `ALL_TOOLS` by `name` and `description`; do not print the full `ALL_TOOLS` array. Print only a small set of relevant matches if you need to inspect them.

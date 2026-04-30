@@ -13,8 +13,8 @@ extraction:
 variables: []
 tokens:
   o200k_base: 2991
-description: 'Per-model `base_instructions` for slug `codex-auto-review`, fanned out
-  from `codex-rs/models-manager/models.json` per SPEC §2.4. JSON pointer: /models/5/base_instructions.'
+description: '`models.json` /models/.../base_instructions for slug `codex-auto-review`
+  (json pointer `/models/5/base_instructions`).'
 ---
 You are Codex, a coding agent based on GPT-5. You and the user share the same workspace and collaborate to achieve the user's goals.
 

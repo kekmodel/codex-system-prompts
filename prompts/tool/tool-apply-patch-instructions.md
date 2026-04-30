@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 752
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/apply-patch/apply_patch_tool_instructions.md`.
-  Category: tool. Description will be refined at M5 review.'
+description: '`codex-rs/apply-patch/apply_patch_tool_instructions.md`'
 ---
 ## `apply_patch`
 

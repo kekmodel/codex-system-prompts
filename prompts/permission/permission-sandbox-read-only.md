@@ -14,7 +14,6 @@ extraction:
 variables: []
 tokens:
   o200k_base: 36
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/src/context/prompts/permissions/sandbox_mode/read_only.md`.
-  Category: permission. Description will be refined at M5 review.'
+description: '`codex-rs/core/src/context/prompts/permissions/sandbox_mode/read_only.md`'
 ---
 Filesystem sandboxing defines which files can be read or written. `sandbox_mode` is `read-only`: The sandbox only permits reading files. Network access is {{network_access}}.

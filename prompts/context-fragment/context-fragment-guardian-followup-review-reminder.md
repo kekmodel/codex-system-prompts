@@ -12,26 +12,12 @@ source:
   role: developer
   start_marker: ''
   end_marker: ''
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 89
-description: '`GuardianFollowupReviewReminder` ContextualUserFragment from `codex-rs/core/src/context/guardian_followup_review_reminder.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as function-body-source.'
+  o200k_base: 0
+description: '`GuardianFollowupReviewReminder` ContextualUserFragment.'
 ---
-```rust
-fn body(&self) -> String {
-concat!(
-            "Use prior reviews as context, not binding precedent. ",
-            "Follow the Workspace Policy. ",
-            "If the user explicitly approves a previously rejected action after being informed of the ",
-            "concrete risks, set outcome to \"allow\" unless the policy explicitly disallows user ",
-            "overwrites in such cases."
-        )
-        .to_string()
-}
-```
-

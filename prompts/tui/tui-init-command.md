@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 322
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/tui/prompt_for_init_command.md`.
-  Category: tui. Description will be refined at M5 review.'
+description: '`codex-rs/tui/prompt_for_init_command.md`'
 ---
 Generate a file named AGENTS.md that serves as a contributor guide for this repository.
 Your goal is to produce a clear, concise, and well-structured document with descriptive headings and actionable explanations for each section.

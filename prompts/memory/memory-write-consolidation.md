@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 10379
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/memories/write/templates/memories/consolidation.md`.
-  Category: memory. Description will be refined at M5 review.'
+description: '`codex-rs/memories/write/templates/memories/consolidation.md`'
 ---
 ## Memory Writing Agent: Phase 2 (Consolidation)
 

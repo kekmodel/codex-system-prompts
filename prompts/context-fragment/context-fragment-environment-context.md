@@ -12,52 +12,12 @@ source:
   role: user
   start_marker: ''
   end_marker: ''
-  body_extraction: function-body-source
+  body_extraction: markers_only
 extraction:
   pass: 1.6
   method: rust_contextual_user_fragment
 variables: []
 tokens:
-  o200k_base: 335
-description: '`EnvironmentContext` ContextualUserFragment from `codex-rs/core/src/context/environment_context.rs`.
-  Role: ''user''. Markers: '''' … ''''. body() captured as function-body-source.'
+  o200k_base: 0
+description: '`EnvironmentContext` ContextualUserFragment.'
 ---
-```rust
-fn body(&self) -> String {
-let mut lines = Vec::new();
-        if let Some(cwd) = &self.cwd {
-            lines.push(format!("  <cwd>{}</cwd>", cwd.to_string_lossy()));
-        }
-
-        lines.push(format!("  <shell>{}</shell>", self.shell));
-        if let Some(current_date) = &self.current_date {
-            lines.push(format!("  <current_date>{current_date}</current_date>"));
-        }
-        if let Some(timezone) = &self.timezone {
-            lines.push(format!("  <timezone>{timezone}</timezone>"));
-        }
-        match &self.network {
-            Some(network) => {
-                lines.push("  <network enabled=\"true\">".to_string());
-                for allowed in &network.allowed_domains {
-                    lines.push(format!("    <allowed>{allowed}</allowed>"));
-                }
-                for denied in &network.denied_domains {
-                    lines.push(format!("    <denied>{denied}</denied>"));
-                }
-                lines.push("  </network>".to_string());
-            }
-            None => {
-                // TODO(mbolin): Include this line if it helps the model.
-                // lines.push("  <network enabled=\"false\" />".to_string());
-            }
-        }
-        if let Some(subagents) = &self.subagents {
-            lines.push("  <subagents>".to_string());
-            lines.extend(subagents.lines().map(|line| format!("    {line}")));
-            lines.push("  </subagents>".to_string());
-        }
-        format!("\n{}\n", lines.join("\n"))
-}
-```
-

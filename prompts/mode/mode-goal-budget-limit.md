@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 139
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/templates/goals/budget_limit.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/templates/goals/budget_limit.md`'
 ---
 The active thread goal has reached its token budget.
 

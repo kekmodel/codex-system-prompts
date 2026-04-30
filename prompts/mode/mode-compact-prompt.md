@@ -14,8 +14,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 89
-description: 'Auto-extracted by Pass 3 (M2) from `codex-rs/core/templates/compact/prompt.md`.
-  Category: mode. Description will be refined at M5 review.'
+description: '`codex-rs/core/templates/compact/prompt.md`'
 ---
 You are performing a CONTEXT CHECKPOINT COMPACTION. Create a handoff summary for another LLM that will resume the task.
 

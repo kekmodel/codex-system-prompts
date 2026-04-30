@@ -43,11 +43,10 @@ def _kind_label(file_path: Path) -> str:
 
 
 def _description(target_rel: Path, category: str) -> str:
-    """Best-effort description from the target's path. M5+ will refine."""
-    return (
-        f"Auto-extracted by Pass 3 (M2) from `codex-rs/{target_rel}`. "
-        f"Category: {category}. Description will be refined at M5 review."
-    )
+    """Frontmatter description: source path only. The body is the model
+    input verbatim; we don't add extractor narration to the description.
+    """
+    return f"`codex-rs/{target_rel}`"
 
 
 def _struct_to_filename(name: str) -> str:
@@ -136,9 +135,8 @@ def emit(
             extraction_method="json_field",
             tokens_o200k_base=token_count,
             description=(
-                f"Per-model `base_instructions` for slug `{me.slug}`, "
-                f"fanned out from `codex-rs/models-manager/models.json` per SPEC §2.4. "
-                f"JSON pointer: {me.json_pointer}."
+                f"`models.json` /models/.../base_instructions for slug `{me.slug}` "
+                f"(json pointer `{me.json_pointer}`)."
             ),
             extra={
                 "source": {
@@ -177,7 +175,11 @@ def emit(
             extraction_pass=1.5,
             extraction_method=cap.extraction_method,
             tokens_o200k_base=token_count,
-            description=cap.description,
+            description=(
+                f"`codex-rs/{cap.source_rel}::{cap.symbol}`"
+                if cap.symbol
+                else f"`codex-rs/{cap.source_rel}`"
+            ),
             extra=extra or None,
         )
         out_path = out_root / "prompts" / cap.category / f"{cap.filename}.md"
@@ -192,29 +194,35 @@ def emit(
         kebab = _struct_to_filename(fc.struct_name)
         filename = f"context-fragment-{kebab}"
 
-        # Compose body of the .md file:
-        #   • If we extracted a clean template: show START_MARKER + template + END_MARKER
-        #   • Else: show START_MARKER + Rust code block of body() + END_MARKER
+        # Body composition strategy:
+        #
+        # The model receives the START marker, the rendered body, and the END
+        # marker concatenated. We mirror that shape:
+        #
+        #   • body_template captured (simple `format!()` / `to_string()`):
+        #     START + template + END — placeholder tokens like `{cwd}` stay
+        #     verbatim because that's what the template literally is.
+        #
+        #   • body_template not captured (the body() fn does dynamic line
+        #     pushing, e.g. EnvironmentContext): we emit only the START + END
+        #     markers and leave the body empty. Reproducing the runtime push
+        #     output statically would require evaluating Rust control flow,
+        #     which we deliberately don't do; the alternative — pasting the
+        #     raw `fn body(&self) -> String { … }` source as a Rust code block
+        #     — is *not* what the model reads, so it's framing prose disguised
+        #     as content. Better empty than wrong.
         if fc.body_template is not None:
-            md_body = (
-                f"{fc.start_marker}{fc.body_template}{fc.end_marker}\n"
-                if not fc.start_marker and not fc.end_marker
-                else f"{fc.start_marker}\n{fc.body_template}\n{fc.end_marker}\n"
-            )
-            kind_suffix = "template"
+            if not fc.start_marker and not fc.end_marker:
+                md_body = fc.body_template
+            else:
+                md_body = f"{fc.start_marker}\n{fc.body_template}\n{fc.end_marker}\n"
+            body_extraction = "template"
         else:
-            block = (
-                "```rust\nfn body(&self) -> String {\n"
-                + fc.body_source
-                + "\n}\n```\n"
-            )
-            wrapped = (
-                f"{block}\n"
-                if not fc.start_marker and not fc.end_marker
-                else f"{fc.start_marker}\n\n{block}\n{fc.end_marker}\n"
-            )
-            md_body = wrapped
-            kind_suffix = "function-body-source"
+            if not fc.start_marker and not fc.end_marker:
+                md_body = ""
+            else:
+                md_body = f"{fc.start_marker}\n\n{fc.end_marker}\n"
+            body_extraction = "markers_only"
 
         token_count = count_o200k_base(md_body)
         callsite = f"{fc.source_rel}:{fc.source_line}"
@@ -225,7 +233,7 @@ def emit(
                 "role": fc.role,
                 "start_marker": fc.start_marker,
                 "end_marker": fc.end_marker,
-                "body_extraction": kind_suffix,
+                "body_extraction": body_extraction,
             }
         }
 
@@ -240,12 +248,7 @@ def emit(
             extraction_pass=1.6,
             extraction_method="rust_contextual_user_fragment",
             tokens_o200k_base=token_count,
-            description=(
-                f"`{fc.struct_name}` ContextualUserFragment from "
-                f"`codex-rs/{fc.source_rel}`. Role: {fc.role!r}. "
-                f"Markers: {fc.start_marker!r} … {fc.end_marker!r}. "
-                f"body() captured as {kind_suffix}."
-            ),
+            description=f"`{fc.struct_name}` ContextualUserFragment.",
             extra=extra,
         )
         out_path = out_root / "prompts" / "context-fragment" / f"{filename}.md"

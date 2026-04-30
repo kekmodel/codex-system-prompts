@@ -19,9 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 31
-description: '`PersonalitySpecInstructions` ContextualUserFragment from `codex-rs/core/src/context/personality_spec_instructions.rs`.
-  Role: ''developer''. Markers: ''<personality_spec>'' … ''</personality_spec>''.
-  body() captured as template.'
+description: '`PersonalitySpecInstructions` ContextualUserFragment.'
 ---
 <personality_spec>
  The user has requested a new communication style. Future messages should adhere to the following personality: 

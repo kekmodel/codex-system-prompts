@@ -19,8 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 143
-description: '`AppsInstructions` ContextualUserFragment from `codex-rs/core/src/context/apps_instructions.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as template.'
+description: '`AppsInstructions` ContextualUserFragment.'
 ---
 
 ## Apps (Connectors)
@@ -28,4 +27,3 @@ Apps (Connectors) can be explicitly triggered in user messages in the format `[$
 An app is equivalent to a set of MCP tools within the `{CODEX_APPS_MCP_SERVER_NAME}` MCP.
 An installed app's MCP tools are either provided to you already, or can be lazy-loaded through the `tool_search` tool. If `tool_search` is available, the apps that are searchable by `tools_search` will be listed by it.
 Do not additionally call list_mcp_resources or list_mcp_resource_templates for apps.
-

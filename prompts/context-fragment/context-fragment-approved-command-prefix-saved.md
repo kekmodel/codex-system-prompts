@@ -19,8 +19,7 @@ extraction:
 variables: []
 tokens:
   o200k_base: 6
-description: '`ApprovedCommandPrefixSaved` ContextualUserFragment from `codex-rs/core/src/context/approved_command_prefix_saved.rs`.
-  Role: ''developer''. Markers: '''' … ''''. body() captured as template.'
+description: '`ApprovedCommandPrefixSaved` ContextualUserFragment.'
 ---
 Approved command prefix saved:
 {}
