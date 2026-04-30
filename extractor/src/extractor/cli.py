@@ -49,7 +49,6 @@ def extract(codex_root: str, tag: str | None, out: str, mode: str) -> None:
     table.add_row("Pass 3:   from allow-list", str(report.pass3_allowlist_written))
     table.add_row("Pass 3:   from ContextualUserFragments", str(report.pass3_fragments_written))
     table.add_row("Pass 3:   from ToolSpec captures", str(report.pass3_toolspec_written))
-    table.add_row("Pass 3:   from ToolSpec parameters", str(report.pass3_toolspec_params_written))
     table.add_row("Pass 3: uncategorized (rule miss)", str(report.pass3_uncategorized))
     table.add_row("Pass 3 (orphan audit): files written", str(report.orphan_written))
     table.add_row("Pass 3 (orphan audit): empty skipped", str(report.orphan_skipped_empty))
