@@ -103,10 +103,17 @@ class ToolSpecCapture:
     file_rel: Path           # path relative to codex-rs/
     line: int
     tool_name: str
-    description: str
-    description_kind: str    # "static_plain" | "static_raw" | "let_binding" | "fn_call" | "unknown"
-    let_binding_kind: str | None = None  # populated when description_kind="let_binding"
-    fn_callee: str | None = None         # populated when description_kind="fn_call"
+    description: str         # raw description text the model receives (no framing)
+    description_kind: str    # "static_plain" | "static_raw" | "const_ref" | "let_literal" | "fn_resolved" | "unresolved"
+    let_binding_kind: str | None = None  # populated when sub-kind="let_*"
+    fn_callee: str | None = None         # populated when description came from a fn
+
+    # Set only when the description splits across `cfg!(windows)` branches.
+    # When set, `description` is empty; the emit step writes two separate
+    # files (one for each platform).
+    windows_description: str | None = None
+    unix_description: str | None = None
+
     parameters: list[ParameterCapture] = field(default_factory=list)
 
 
@@ -251,19 +258,28 @@ _LET_BINDING_RX_TPL = (
 
 def _resolve_let_binding(
     fn_text: str, var_name: str
-) -> tuple[str, str, str | None]:
+) -> tuple[str, str, str | None, str | None, str | None]:
     """Find ``let <var_name> = <expr>;`` in fn_text and classify <expr>.
 
-    Returns (kind, body, sub_label). Currently handles two shapes:
+    Returns (kind, body, sub_label, windows_body, unix_body):
 
-    - ``let description = if cfg!(windows) { format!(r#"..."#, …) } else { r#"..."#.to_string() };``
-      Returns kind="cfg_conditional", body="<windows>\n\n---\n\n<unix>".
-    - Anything else: kind="let_unresolved", body="(see source — let-binding not statically resolvable)".
+    - For `if cfg!(windows) { … } else { … }`, kind="cfg_conditional",
+      body="" (caller checks windows_body / unix_body), windows_body and
+      unix_body hold the raw resolved literal for each platform.
+    - For a literal value, kind="let_literal", body=<resolved>.
+    - For a direct fn call, kind="let_fn_call", sub_label=<callee>.
+    - Otherwise kind="let_unresolved", body=<diagnostic placeholder>.
     """
     pat = re.compile(_LET_BINDING_RX_TPL.format(name=re.escape(var_name)))
     m = pat.search(fn_text)
     if not m:
-        return ("let_unresolved", f"(no `let {var_name} = ...` found in enclosing fn)", None)
+        return (
+            "let_unresolved",
+            f"(no `let {var_name} = ...` found in enclosing fn)",
+            None,
+            None,
+            None,
+        )
 
     expr_start = m.end()
     # Scan to the terminating `;` at depth 0, respecting strings + braces.
@@ -304,7 +320,13 @@ def _resolve_let_binding(
         pos += 1
 
     if semicolon == -1:
-        return ("let_unresolved", "(could not find terminating semicolon for let-binding)", None)
+        return (
+            "let_unresolved",
+            "(could not find terminating semicolon for let-binding)",
+            None,
+            None,
+            None,
+        )
 
     expr = fn_text[expr_start:semicolon].strip()
 
@@ -317,29 +339,35 @@ def _resolve_let_binding(
     if cfg_m:
         win = cfg_m.group("win").strip()
         unix = cfg_m.group("unix").strip()
-        win_body = _classify_inline_string(win) or f"(non-literal Windows branch)\n\n```\n{win}\n```"
-        unix_body = _classify_inline_string(unix) or f"(non-literal Unix branch)\n\n```\n{unix}\n```"
-        body = (
-            "## Windows branch (`cfg!(windows)` true)\n\n"
-            f"{win_body}\n\n"
-            "## Unix branch (`cfg!(windows)` false)\n\n"
-            f"{unix_body}\n"
-        )
-        return ("cfg_conditional", body, None)
+        win_body = _classify_inline_string(win)
+        unix_body = _classify_inline_string(unix)
+        return ("cfg_conditional", "", None, win_body, unix_body)
 
     # Direct call: `let description = something();`
     direct_m = re.match(r"^(\w+)\s*\(", expr)
     if direct_m:
-        return ("let_fn_call", f"(see source — let binds the result of `{direct_m.group(1)}(…)`)", direct_m.group(1))
+        return (
+            "let_fn_call",
+            "",
+            direct_m.group(1),
+            None,
+            None,
+        )
 
     # Plain literal — pass through.
     inline_body = _classify_inline_string(expr)
     if inline_body is not None:
-        return ("let_literal", inline_body, None)
+        return ("let_literal", inline_body, None, None, None)
 
-    # Fallback: emit the raw expression as a code block so the body is
-    # inspectable.
-    return ("let_unresolved", f"(non-literal let expression)\n\n```\n{expr}\n```", None)
+    # Fallback: leave a diagnostic placeholder so a reviewer can see the
+    # raw expression.
+    return (
+        "let_unresolved",
+        f"(non-literal let expression: {expr[:80]}…)",
+        None,
+        None,
+        None,
+    )
 
 
 def _classify_inline_string(value: str) -> str | None:
@@ -355,22 +383,15 @@ def _classify_inline_string(value: str) -> str | None:
     if plain_m:
         body = plain_m.group(1)
         return body.encode("utf-8", "replace").decode("unicode_escape", "replace")
-    # `format!(r#"..."#, args...)` — capture the template body and append the
-    # arg list as a footer so the placeholders are visible.
-    fmt_m = re.match(r"^format!\s*\(\s*r(#*)\"(.*?)\"\1\s*(?:,(?P<args>.*))?\)\s*$", v, re.DOTALL)
+    # `format!(r#"..."#, args...)` — return the raw template; placeholders
+    # like `{name}` are preserved verbatim. The arg list is metadata for the
+    # mirror, not for the model, so we drop it from the body.
+    fmt_m = re.match(r"^format!\s*\(\s*r(#*)\"(.*?)\"\1\s*(?:,.*)?\)\s*$", v, re.DOTALL)
     if fmt_m:
-        template = fmt_m.group(2)
-        args = (fmt_m.group("args") or "").strip()
-        if args:
-            return f"{template}\n\n_format!() args: `{args}`_"
-        return template
-    fmt_plain = re.match(r"^format!\s*\(\s*\"((?:[^\"\\]|\\.)*)\"\s*(?:,(?P<args>.*))?\)\s*$", v, re.DOTALL)
+        return fmt_m.group(2)
+    fmt_plain = re.match(r"^format!\s*\(\s*\"((?:[^\"\\]|\\.)*)\"\s*(?:,.*)?\)\s*$", v, re.DOTALL)
     if fmt_plain:
-        template = fmt_plain.group(1).encode("utf-8", "replace").decode("unicode_escape", "replace")
-        args = (fmt_plain.group("args") or "").strip()
-        if args:
-            return f"{template}\n\n_format!() args: `{args}`_"
-        return template
+        return fmt_plain.group(1).encode("utf-8", "replace").decode("unicode_escape", "replace")
     return None
 
 
@@ -494,18 +515,26 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
             if desc_span is None and not is_shorthand:
                 continue
 
-            kind = "unknown"
-            body = "(see source)"
+            kind = "unresolved"
+            body = ""
             let_kind: str | None = None
             fn_callee: str | None = None
+            windows_body: str | None = None
+            unix_body: str | None = None
 
             if is_shorthand:
                 # Resolve the `description` variable in the enclosing fn.
                 fn_text = _enclosing_fn_text(text, m.start())
-                sub_kind, sub_body, sub_label = _resolve_let_binding(fn_text, "description")
+                sub_kind, sub_body, sub_label, sub_win, sub_unix = _resolve_let_binding(
+                    fn_text, "description"
+                )
                 kind = "let_binding"
                 let_kind = sub_kind
-                body = sub_body
+                if sub_kind == "cfg_conditional":
+                    windows_body = sub_win
+                    unix_body = sub_unix
+                else:
+                    body = sub_body
                 if sub_label:
                     fn_callee = sub_label
             else:
@@ -528,17 +557,10 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                 elif inline_cfg_m:
                     win = inline_cfg_m.group("win").strip()
                     unix = inline_cfg_m.group("unix").strip()
-                    win_body = _classify_inline_string(win) or f"(non-literal)\n\n```\n{win}\n```"
-                    unix_body = _classify_inline_string(unix) or f"(non-literal)\n\n```\n{unix}\n```"
+                    windows_body = _classify_inline_string(win)
+                    unix_body = _classify_inline_string(unix)
                     kind = "cfg_conditional"
-                    body = (
-                        "## Windows branch (`cfg!(windows)` true)\n\n"
-                        f"{win_body}\n\n"
-                        "## Unix branch (`cfg!(windows)` false)\n\n"
-                        f"{unix_body}\n"
-                    )
                 elif const_call_m:
-                    # `SOMETHING.to_string()` — try to resolve as a string const.
                     resolved = _resolve_const_with_fallback(
                         text, const_call_m.group(1), codex_rs_root
                     )
@@ -547,24 +569,27 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                         body = resolved
                         fn_callee = const_call_m.group(1)
                     else:
-                        kind = "fn_call"
+                        kind = "unresolved"
                         fn_callee = const_call_m.group(1)
-                        body = f"(unresolved identifier `{fn_callee}.to_string()`; see source)"
                 elif ident_m:
                     fn_text = _enclosing_fn_text(text, m.start())
-                    sub_kind, sub_body, sub_label = _resolve_let_binding(fn_text, ident_m.group(1))
+                    sub_kind, sub_body, sub_label, sub_win, sub_unix = _resolve_let_binding(
+                        fn_text, ident_m.group(1)
+                    )
                     kind = "let_binding"
                     let_kind = sub_kind
-                    body = sub_body
+                    if sub_kind == "cfg_conditional":
+                        windows_body = sub_win
+                        unix_body = sub_unix
+                    else:
+                        body = sub_body
                     if sub_label:
                         fn_callee = sub_label
                 elif fn_call_m:
                     kind = "fn_call"
                     fn_callee = fn_call_m.group(1)
-                    body = (
-                        f"(dynamic — `{fn_callee}(...)` builds this description at "
-                        "runtime; see source)"
-                    )
+                    # Body left empty — emit step decides whether to skip
+                    # this capture or fold the helper resolution in.
 
             # Pull JsonSchema parameter descriptions from the enclosing fn.
             # Use _enclosing_fn_text rather than the ToolSpec block itself
@@ -582,6 +607,8 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                     description_kind=kind,
                     let_binding_kind=let_kind,
                     fn_callee=fn_callee,
+                    windows_description=windows_body,
+                    unix_description=unix_body,
                     parameters=params,
                 )
             )

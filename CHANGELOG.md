@@ -4,9 +4,9 @@
 
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
-_+4,898 tokens_
+_+7,153 tokens_
 
-Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 58, MODIFIED: 3, MOVED: 0, REMOVED: 0.
+Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f8660e464661743587f754471ae60868`. NEW: 35, MODIFIED: 3, MOVED: 0, REMOVED: 0.
 
 ## `prompts/mode/`
 
@@ -14,61 +14,38 @@ Diff vs. previous mirror tag `rust-v0.126.0-alpha.12` at codex commit `8148b7b1f
 
 ## `prompts/tool/`
 
-- **NEW:** `tool-close-agent-description-v2.md` (**41** tk) — Inline ToolSpec description for `close_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-close-agent-description.md` (**41** tk) — Inline ToolSpec description for `close_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-close-agent-parameters-v2.md` (**73** tk) — Per-parameter `JsonSchema` descriptions for `close_agent` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-close-agent-parameters.md` (**69** tk) — Per-parameter `JsonSchema` descriptions for `close_agent` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-create-goal-description.md` (**55** tk) — Inline ToolSpec description for `create_goal` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-create-goal-parameters.md` (**111** tk) — Per-parameter `JsonSchema` descriptions for `create_goal` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-exec-command-description.md` (**69** tk) — Inline ToolSpec description for `exec_command` — `cfg!(windows)` conditional. Both branches captured side-by-side. Pass 1.7 (M9).
-- **NEW:** `tool-exec-command-parameters.md` (**211** tk) — Per-parameter `JsonSchema` descriptions for `exec_command` (7 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-followup-task-description.md` (**48** tk) — Inline ToolSpec description for `followup_task` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-followup-task-parameters.md` (**90** tk) — Per-parameter `JsonSchema` descriptions for `followup_task` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-get-goal-description.md` (**24** tk) — Inline ToolSpec description for `get_goal` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-list-agents-description.md` (**18** tk) — Inline ToolSpec description for `list_agents` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-list-agents-parameters.md` (**83** tk) — Per-parameter `JsonSchema` descriptions for `list_agents` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-list-dir-description.md` (**18** tk) — Inline ToolSpec description for `list_dir` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-list-dir-parameters.md` (**127** tk) — Per-parameter `JsonSchema` descriptions for `list_dir` (4 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-list-mcp-resource-templates-description.md` (**48** tk) — Inline ToolSpec description for `list_mcp_resource_templates` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-list-mcp-resource-templates-parameters.md` (**104** tk) — Per-parameter `JsonSchema` descriptions for `list_mcp_resource_templates` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-list-mcp-resources-description.md` (**40** tk) — Inline ToolSpec description for `list_mcp_resources` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-list-mcp-resources-parameters.md` (**101** tk) — Per-parameter `JsonSchema` descriptions for `list_mcp_resources` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-read-mcp-resource-description.md` (**16** tk) — Inline ToolSpec description for `read_mcp_resource` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-read-mcp-resource-parameters.md` (**111** tk) — Per-parameter `JsonSchema` descriptions for `read_mcp_resource` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-report-agent-job-result-description.md` (**20** tk) — Inline ToolSpec description for `report_agent_job_result` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-report-agent-job-result-parameters.md` (**107** tk) — Per-parameter `JsonSchema` descriptions for `report_agent_job_result` (3 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-request-permissions-description.md` (**12** tk) — Inline ToolSpec description for `request_permissions` resolved from a `let description = …` binding (sub-kind `let_unresolved`). Pass 1.7 (M9).
-- **NEW:** `tool-request-permissions-parameters.md` (**69** tk) — Per-parameter `JsonSchema` descriptions for `request_permissions` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-request-user-input-description.md` (**12** tk) — Inline ToolSpec description for `request_user_input` resolved from a `let description = …` binding (sub-kind `let_unresolved`). Pass 1.7 (M9).
-- **NEW:** `tool-request-user-input-parameters.md` (**141** tk) — Per-parameter `JsonSchema` descriptions for `request_user_input` (5 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-resume-agent-description.md` (**18** tk) — Inline ToolSpec description for `resume_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-resume-agent-parameters.md` (**65** tk) — Per-parameter `JsonSchema` descriptions for `resume_agent` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-send-input-description.md` (**41** tk) — Inline ToolSpec description for `send_input` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-send-input-parameters.md` (**122** tk) — Per-parameter `JsonSchema` descriptions for `send_input` (3 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-send-message-description.md` (**22** tk) — Inline ToolSpec description for `send_message` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-send-message-parameters.md` (**88** tk) — Per-parameter `JsonSchema` descriptions for `send_message` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-shell-command-description.md` (**227** tk) — Inline ToolSpec description for `shell_command` resolved from a `let description = …` binding (sub-kind `cfg_conditional`). Pass 1.7 (M9).
-- **NEW:** `tool-shell-command-parameters.md` (**124** tk) — Per-parameter `JsonSchema` descriptions for `shell_command` (4 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-shell-description.md` (**333** tk) — Inline ToolSpec description for `shell` resolved from a `let description = …` binding (sub-kind `cfg_conditional`). Pass 1.7 (M9).
-- **NEW:** `tool-shell-parameters.md` (**84** tk) — Per-parameter `JsonSchema` descriptions for `shell` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-spawn-agent-description-v2.md` (**20** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description_v2(...)`. Body is a placeholder; resolving the helper is a fo…
-- **NEW:** `tool-spawn-agent-description.md` (**18** tk) — Inline ToolSpec description for `spawn_agent` — built dynamically by `spawn_agent_tool_description(...)`. Body is a placeholder; resolving the helper is a follo…
-- **NEW:** `tool-spawn-agent-parameters-v2.md` (**77** tk) — Per-parameter `JsonSchema` descriptions for `spawn_agent` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-spawn-agents-on-csv-description.md` (**82** tk) — Inline ToolSpec description for `spawn_agents_on_csv` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-spawn-agents-on-csv-parameters.md` (**211** tk) — Per-parameter `JsonSchema` descriptions for `spawn_agents_on_csv` (7 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-test-sync-tool-description.md` (**10** tk) — Inline ToolSpec description for `test_sync_tool` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-test-sync-tool-parameters.md` (**144** tk) — Per-parameter `JsonSchema` descriptions for `test_sync_tool` (5 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-tool-suggest-description.md` (**451** tk) — Inline ToolSpec description for `tool_suggest` resolved from a `let description = …` binding (sub-kind `let_literal`). Pass 1.7 (M9).
-- **NEW:** `tool-tool-suggest-parameters.md` (**136** tk) — Per-parameter `JsonSchema` descriptions for `tool_suggest` (4 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-update-goal-description.md` (**107** tk) — Inline ToolSpec description for `update_goal` (literal `static_raw`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-update-plan-description.md` (**35** tk) — Inline ToolSpec description for `update_plan` (literal `static_raw`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-update-plan-parameters.md` (**70** tk) — Per-parameter `JsonSchema` descriptions for `update_plan` (1 parameter). Pass 1.7 (M9).
-- **NEW:** `tool-view-image-description.md` (**36** tk) — Inline ToolSpec description for `view_image` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-view-image-parameters.md` (**132** tk) — Per-parameter `JsonSchema` descriptions for `view_image` (2 parameters). Pass 1.7 (M9).
-- **NEW:** `tool-wait-agent-description-v2.md` (**50** tk) — Inline ToolSpec description for `wait_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-wait-agent-description.md` (**46** tk) — Inline ToolSpec description for `wait_agent` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-write-stdin-description.md` (**13** tk) — Inline ToolSpec description for `write_stdin` (literal `static_plain`). Captured by Pass 1.7 (M9).
-- **NEW:** `tool-write-stdin-parameters.md` (**132** tk) — Per-parameter `JsonSchema` descriptions for `write_stdin` (4 parameters). Pass 1.7 (M9).
+- **NEW:** `tool-apply-patch.md` (**856** tk) — `apply_patch` ToolSpec.
+- **NEW:** `tool-close-agent-v2.md` (**124** tk) — `close_agent` ToolSpec.
+- **NEW:** `tool-close-agent.md` (**120** tk) — `close_agent` ToolSpec.
+- **NEW:** `tool-create-goal.md` (**188** tk) — `create_goal` ToolSpec.
+- **NEW:** `tool-exec-command-unix.md` (**311** tk) — `exec_command` ToolSpec.
+- **NEW:** `tool-exec-command-windows.md` (**315** tk) — `exec_command` ToolSpec.
+- **NEW:** `tool-followup-task.md` (**160** tk) — `followup_task` ToolSpec.
+- **NEW:** `tool-get-goal.md` (**72** tk) — `get_goal` ToolSpec.
+- **NEW:** `tool-list-agents.md` (**110** tk) — `list_agents` ToolSpec.
+- **NEW:** `tool-list-dir.md` (**190** tk) — `list_dir` ToolSpec.
+- **NEW:** `tool-list-mcp-resource-templates.md` (**172** tk) — `list_mcp_resource_templates` ToolSpec.
+- **NEW:** `tool-list-mcp-resources.md` (**161** tk) — `list_mcp_resources` ToolSpec.
+- **NEW:** `tool-read-mcp-resource.md` (**147** tk) — `read_mcp_resource` ToolSpec.
+- **NEW:** `tool-report-agent-job-result.md` (**159** tk) — `report_agent_job_result` ToolSpec.
+- **NEW:** `tool-request-permissions.md` (**91** tk) — `request_permissions` ToolSpec.
+- **NEW:** `tool-request-user-input.md` (**212** tk) — `request_user_input` ToolSpec.
+- **NEW:** `tool-resume-agent.md` (**92** tk) — `resume_agent` ToolSpec.
+- **NEW:** `tool-send-input.md` (**197** tk) — `send_input` ToolSpec.
+- **NEW:** `tool-send-message.md` (**132** tk) — `send_message` ToolSpec.
+- **NEW:** `tool-shell-command-unix.md` (**206** tk) — `shell_command` ToolSpec.
+- **NEW:** `tool-shell-command-windows.md` (**345** tk) — `shell_command` ToolSpec.
+- **NEW:** `tool-shell-unix.md` (**174** tk) — `shell` ToolSpec.
+- **NEW:** `tool-shell-windows.md` (**379** tk) — `shell` ToolSpec.
+- **NEW:** `tool-spawn-agents-on-csv.md` (**374** tk) — `spawn_agents_on_csv` ToolSpec.
+- **NEW:** `tool-test-sync-tool.md` (**211** tk) — `test_sync_tool` ToolSpec.
+- **NEW:** `tool-tool-suggest.md` (**657** tk) — `tool_suggest` ToolSpec.
+- **NEW:** `tool-update-goal.md` (**160** tk) — `update_goal` ToolSpec.
+- **NEW:** `tool-update-plan.md` (**118** tk) — `update_plan` ToolSpec.
+- **NEW:** `tool-view-image.md` (**191** tk) — `view_image` ToolSpec.
+- **NEW:** `tool-wait-agent-v2.md` (**98** tk) — `wait_agent` ToolSpec.
+- **NEW:** `tool-wait-agent.md` (**94** tk) — `wait_agent` ToolSpec.
+- **NEW:** `tool-write-stdin.md` (**192** tk) — `write_stdin` ToolSpec.
 
 ## `prompts/memory/`
 

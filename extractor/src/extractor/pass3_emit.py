@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,7 +24,6 @@ class EmitResult:
     allowlist_written: int = 0     # count of allow-list captures emitted
     fragment_written: int = 0      # count of ContextualUserFragment captures emitted
     toolspec_written: int = 0      # count of inline ToolSpec captures emitted (Pass 1.7)
-    toolspec_params_written: int = 0  # count of tool-parameters bundles emitted (Pass 1.7)
 
 
 def _kind_label(file_path: Path) -> str:
@@ -255,161 +255,103 @@ def emit(
         fragment_written += 1
 
     # ========== ToolSpec captures (Pass 1.7 — M9) ==========
+    #
+    # Each captured ToolSpec emits one (or two, for cfg!(windows)) JSON
+    # documents matching the wire format the model receives — i.e. the
+    # same shape as `serde_json::to_string(&tool_spec)` in codex's
+    # ResponsesApiTool serializer. The body of each .md file is the raw
+    # JSON the model sees; nothing else is added.
     toolspec_written = 0
-    toolspec_params_written = 0
-    # Skip captures whose body is byte-identical to an already-emitted
-    # allow-list capture (e.g. const-ref ToolSpec descriptions whose const
-    # is curated under Pass 1.5 with a hand-picked filename).
-    allowlist_bodies = {
-        cap.body.strip() for cap in allowlist_captures if cap.body.strip()
-    }
     safe_name_rx = re.compile(r"[^a-z0-9]+")
-    for tc in toolspec_captures:
-        body = tc.description
-        if not body or not body.strip():
-            continue
-        if body.strip() in allowlist_bodies:
-            # Already emitted via Pass 1.5 with a curated filename.
-            continue
-        slug = safe_name_rx.sub("-", tc.tool_name.lower()).strip("-")
-        filename = f"tool-{slug}-description"
-        out_path = out_root / "prompts" / "tool" / f"{filename}.md"
-        # Avoid filename collisions: append an index if a previous emit (e.g.
-        # two ToolSpecs sharing the same tool_name like wait_agent v1/v2)
-        # already wrote this path. `written` stores paths relative to out_root.
-        rel_path = out_path.relative_to(out_root)
-        suffix = 1
-        while rel_path in written:
-            suffix += 1
-            out_path = out_root / "prompts" / "tool" / f"{filename}-v{suffix}.md"
-            rel_path = out_path.relative_to(out_root)
-        token_count = count_o200k_base(body)
-        callsite = f"{tc.file_rel}:{tc.line}"
 
-        extra: dict = {
-            "source": {
-                "tool_name": tc.tool_name,
-                "description_kind": tc.description_kind,
+    def _build_tool_json(
+        tool_name: str, description: str, parameters: list
+    ) -> dict:
+        properties: dict[str, dict] = {}
+        for p in parameters:
+            properties[p.name] = {
+                "type": p.schema_type,
+                "description": p.description,
             }
+        return {
+            "type": "function",
+            "name": tool_name,
+            "description": description,
+            "parameters": {
+                "type": "object",
+                "properties": properties,
+                "additionalProperties": False,
+            },
         }
-        if tc.let_binding_kind:
-            extra["source"]["let_binding_kind"] = tc.let_binding_kind
-        if tc.fn_callee:
-            extra["source"]["resolves_via"] = tc.fn_callee
 
-        # Description (frontmatter-side narration) — explain what the file
-        # contains so a reader can quickly tell whether it was statically
-        # resolved or marked dynamic.
-        if tc.description_kind in ("static_plain", "static_raw"):
-            desc = (
-                f"Inline ToolSpec description for `{tc.tool_name}` "
-                f"(literal `{tc.description_kind}`). Captured by Pass 1.7 (M9)."
-            )
-        elif tc.description_kind == "const_ref":
-            desc = (
-                f"Inline ToolSpec description for `{tc.tool_name}` resolved from "
-                f"the `{tc.fn_callee}` string constant. Captured by Pass 1.7 (M9)."
-            )
-        elif tc.description_kind == "cfg_conditional":
-            desc = (
-                f"Inline ToolSpec description for `{tc.tool_name}` — `cfg!(windows)` "
-                "conditional. Both branches captured side-by-side. Pass 1.7 (M9)."
-            )
-        elif tc.description_kind == "let_binding":
-            desc = (
-                f"Inline ToolSpec description for `{tc.tool_name}` resolved from a "
-                f"`let description = …` binding (sub-kind `{tc.let_binding_kind}`). "
-                "Pass 1.7 (M9)."
-            )
-        elif tc.description_kind == "fn_call":
-            desc = (
-                f"Inline ToolSpec description for `{tc.tool_name}` — built dynamically "
-                f"by `{tc.fn_callee}(...)`. Body is a placeholder; resolving the helper "
-                "is a follow-up. Pass 1.7 (M9)."
-            )
-        else:
-            desc = f"Inline ToolSpec description for `{tc.tool_name}` (Pass 1.7, M9)."
+    def _emit_toolspec(
+        slug: str,
+        variant_suffix: str,
+        tc,
+        description_text: str,
+    ) -> None:
+        nonlocal toolspec_written
+        # Pick a filename, appending `-v2`, `-v3`, … on collision (two
+        # ToolSpec literals with the same tool_name in the same file —
+        # e.g. wait_agent v1 vs v2).
+        base = f"tool-{slug}{variant_suffix}"
+        out_path = out_root / "prompts" / "tool" / f"{base}.md"
+        rel_path = out_path.relative_to(out_root)
+        n = 1
+        while rel_path in written:
+            n += 1
+            out_path = out_root / "prompts" / "tool" / f"{base}-v{n}.md"
+            rel_path = out_path.relative_to(out_root)
+
+        tool_json = _build_tool_json(tc.tool_name, description_text, tc.parameters)
+        body = json.dumps(tool_json, indent=2, ensure_ascii=False) + "\n"
+        token_count = count_o200k_base(body)
+
+        extra: dict = {"source": {"tool_name": tc.tool_name}}
+        if variant_suffix:
+            extra["source"]["cfg_branch"] = variant_suffix.lstrip("-")
 
         fm = render_frontmatter(
-            name=f"Tool: {tc.tool_name} description",
+            name=f"Tool: {tc.tool_name}",
             category="tool",
             codex_version=codex_version,
             codex_commit=codex_commit,
             source_path=Path("codex-rs") / tc.file_rel,
             source_kind="rust_toolspec_inline",
-            callsite=callsite,
+            callsite=f"{tc.file_rel}:{tc.line}",
             extraction_pass=1.7,
             extraction_method="rust_toolspec_inline",
             tokens_o200k_base=token_count,
-            description=desc,
+            description=f"`{tc.tool_name}` ToolSpec.",
             extra=extra,
         )
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(fm + body + ("\n" if not body.endswith("\n") else ""))
-        written.append(out_path.relative_to(out_root))
+        out_path.write_text(fm + body)
+        written.append(rel_path)
         toolspec_written += 1
 
-        # Sibling file: parameter descriptions (one tool's parameters bundled
-        # together so a reviewer can scan the model-visible parameter docs in
-        # one place). Skip if the tool has no scalar/array parameters with
-        # captured descriptions.
-        if not tc.parameters:
+    for tc in toolspec_captures:
+        slug = safe_name_rx.sub("-", tc.tool_name.lower()).strip("-")
+
+        # Skip captures whose description we cannot resolve at all — emitting
+        # a JSON with an empty description string would be misleading. fn_call
+        # / unresolved-let cases land here; resolving them is a follow-up.
+        if (
+            not tc.description.strip()
+            and tc.windows_description is None
+            and tc.unix_description is None
+        ):
             continue
 
-        params_filename = f"tool-{slug}-parameters"
-        if suffix > 1:
-            params_filename = f"{params_filename}-v{suffix}"
-        params_out = out_root / "prompts" / "tool" / f"{params_filename}.md"
-        params_rel = params_out.relative_to(out_root)
-        body_lines: list[str] = [
-            f"# Tool: `{tc.tool_name}` — parameters",
-            "",
-            (
-                f"Per-parameter descriptions extracted from the `JsonSchema` properties "
-                f"bag in the enclosing fn (`{tc.file_rel}:{tc.line}`). The model sees "
-                f"each `description` field on each parameter at tool-spec time."
-            ),
-            "",
-        ]
-        for p in tc.parameters:
-            body_lines.append(f"## `{p.name}` ({p.schema_type})")
-            body_lines.append("")
-            body_lines.append(p.description.strip())
-            body_lines.append("")
-        params_body = "\n".join(body_lines).rstrip() + "\n"
-        params_token_count = count_o200k_base(params_body)
+        if tc.windows_description is not None or tc.unix_description is not None:
+            # cfg!(windows) split — emit one file per platform branch.
+            if tc.windows_description:
+                _emit_toolspec(slug, "-windows", tc, tc.windows_description)
+            if tc.unix_description:
+                _emit_toolspec(slug, "-unix", tc, tc.unix_description)
+            continue
 
-        params_extra: dict = {
-            "source": {
-                "tool_name": tc.tool_name,
-                "parameter_count": len(tc.parameters),
-                "parameters": [
-                    {"name": p.name, "schema_type": p.schema_type}
-                    for p in tc.parameters
-                ],
-            }
-        }
-        params_fm = render_frontmatter(
-            name=f"Tool: {tc.tool_name} parameters",
-            category="tool",
-            codex_version=codex_version,
-            codex_commit=codex_commit,
-            source_path=Path("codex-rs") / tc.file_rel,
-            source_kind="rust_jsonschema_property",
-            callsite=callsite,
-            extraction_pass=1.7,
-            extraction_method="rust_jsonschema_property",
-            tokens_o200k_base=params_token_count,
-            description=(
-                f"Per-parameter `JsonSchema` descriptions for `{tc.tool_name}` "
-                f"({len(tc.parameters)} parameter{'s' if len(tc.parameters) != 1 else ''}). "
-                "Pass 1.7 (M9)."
-            ),
-            extra=params_extra,
-        )
-        params_out.write_text(params_fm + params_body)
-        written.append(params_rel)
-        toolspec_params_written += 1
+        _emit_toolspec(slug, "", tc, tc.description)
 
     return EmitResult(
         written=written,
@@ -417,5 +359,4 @@ def emit(
         allowlist_written=allowlist_written,
         fragment_written=fragment_written,
         toolspec_written=toolspec_written,
-        toolspec_params_written=toolspec_params_written,
     )
