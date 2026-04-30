@@ -23,6 +23,7 @@ class EmitResult:
     allowlist_written: int = 0     # count of allow-list captures emitted
     fragment_written: int = 0      # count of ContextualUserFragment captures emitted
     toolspec_written: int = 0      # count of inline ToolSpec captures emitted (Pass 1.7)
+    toolspec_params_written: int = 0  # count of tool-parameters bundles emitted (Pass 1.7)
 
 
 def _kind_label(file_path: Path) -> str:
@@ -255,6 +256,7 @@ def emit(
 
     # ========== ToolSpec captures (Pass 1.7 — M9) ==========
     toolspec_written = 0
+    toolspec_params_written = 0
     # Skip captures whose body is byte-identical to an already-emitted
     # allow-list capture (e.g. const-ref ToolSpec descriptions whose const
     # is curated under Pass 1.5 with a hand-picked filename).
@@ -347,10 +349,73 @@ def emit(
         written.append(out_path.relative_to(out_root))
         toolspec_written += 1
 
+        # Sibling file: parameter descriptions (one tool's parameters bundled
+        # together so a reviewer can scan the model-visible parameter docs in
+        # one place). Skip if the tool has no scalar/array parameters with
+        # captured descriptions.
+        if not tc.parameters:
+            continue
+
+        params_filename = f"tool-{slug}-parameters"
+        if suffix > 1:
+            params_filename = f"{params_filename}-v{suffix}"
+        params_out = out_root / "prompts" / "tool" / f"{params_filename}.md"
+        params_rel = params_out.relative_to(out_root)
+        body_lines: list[str] = [
+            f"# Tool: `{tc.tool_name}` — parameters",
+            "",
+            (
+                f"Per-parameter descriptions extracted from the `JsonSchema` properties "
+                f"bag in the enclosing fn (`{tc.file_rel}:{tc.line}`). The model sees "
+                f"each `description` field on each parameter at tool-spec time."
+            ),
+            "",
+        ]
+        for p in tc.parameters:
+            body_lines.append(f"## `{p.name}` ({p.schema_type})")
+            body_lines.append("")
+            body_lines.append(p.description.strip())
+            body_lines.append("")
+        params_body = "\n".join(body_lines).rstrip() + "\n"
+        params_token_count = count_o200k_base(params_body)
+
+        params_extra: dict = {
+            "source": {
+                "tool_name": tc.tool_name,
+                "parameter_count": len(tc.parameters),
+                "parameters": [
+                    {"name": p.name, "schema_type": p.schema_type}
+                    for p in tc.parameters
+                ],
+            }
+        }
+        params_fm = render_frontmatter(
+            name=f"Tool: {tc.tool_name} parameters",
+            category="tool",
+            codex_version=codex_version,
+            codex_commit=codex_commit,
+            source_path=Path("codex-rs") / tc.file_rel,
+            source_kind="rust_jsonschema_property",
+            callsite=callsite,
+            extraction_pass=1.7,
+            extraction_method="rust_jsonschema_property",
+            tokens_o200k_base=params_token_count,
+            description=(
+                f"Per-parameter `JsonSchema` descriptions for `{tc.tool_name}` "
+                f"({len(tc.parameters)} parameter{'s' if len(tc.parameters) != 1 else ''}). "
+                "Pass 1.7 (M9)."
+            ),
+            extra=params_extra,
+        )
+        params_out.write_text(params_fm + params_body)
+        written.append(params_rel)
+        toolspec_params_written += 1
+
     return EmitResult(
         written=written,
         orphans=orphans,
         allowlist_written=allowlist_written,
         fragment_written=fragment_written,
         toolspec_written=toolspec_written,
+        toolspec_params_written=toolspec_params_written,
     )

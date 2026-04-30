@@ -33,6 +33,24 @@ _NAME_LITERAL_RX = re.compile(
 )
 _NAME_CONST_REF_RX = re.compile(r'^(\w+)\s*\.to_string\s*\(\s*\)\s*$')
 
+# Property entries inside `BTreeMap::from([...])` for ToolSpec.parameters:
+#     ("name".to_string(), JsonSchema::<type>(Some("desc".to_string())))
+# or with a raw-string description, or a const-ref name. Multi-line bodies
+# happen often, so we scan with re.DOTALL.
+_PROPERTY_RX = re.compile(
+    r'\(\s*'
+    # name: either "literal".to_string() or IDENT.to_string()
+    r'(?:"([^"\\]*(?:\\.[^"\\]*)*)"|(\w+))\s*\.to_string\s*\(\s*\)\s*,\s*'
+    # JsonSchema::<type>(Some(<desc>.to_string()))
+    # Trailing commas inside Some(...) and after JsonSchema::TYPE(...)
+    # are common when the body is split across multiple lines.
+    r'JsonSchema::(\w+)\s*\(\s*Some\s*\(\s*'
+    r'(?:"((?:[^"\\]|\\.)*)"|r(#*)"(.*?)"\5)\s*'
+    r'\.to_string\s*\(\s*\)\s*,?\s*'
+    r'\)',
+    re.DOTALL,
+)
+
 
 def _resolve_string_const(text: str, name: str) -> str | None:
     """Find ``(pub )?const NAME: &str = "...";`` in `text`. Returns the
@@ -74,6 +92,13 @@ def _resolve_const_with_fallback(
 
 
 @dataclass
+class ParameterCapture:
+    name: str            # property name (e.g. "dir_path")
+    schema_type: str     # "string" | "number" | "boolean" | "integer" | "array" | "object"
+    description: str     # JsonSchema property description (post escape-decode)
+
+
+@dataclass
 class ToolSpecCapture:
     file_rel: Path           # path relative to codex-rs/
     line: int
@@ -82,6 +107,7 @@ class ToolSpecCapture:
     description_kind: str    # "static_plain" | "static_raw" | "let_binding" | "fn_call" | "unknown"
     let_binding_kind: str | None = None  # populated when description_kind="let_binding"
     fn_callee: str | None = None         # populated when description_kind="fn_call"
+    parameters: list[ParameterCapture] = field(default_factory=list)
 
 
 def _scan_balanced(text: str, start: int) -> int:
@@ -368,6 +394,55 @@ def _enclosing_fn_text(text: str, struct_pos: int) -> str:
     return text[fn_match.start():body_close + 1]
 
 
+def _extract_parameters(
+    fn_text: str, source_text: str, codex_rs_root: Path
+) -> list[ParameterCapture]:
+    """Pull JsonSchema property descriptions out of `fn_text`.
+
+    Matches the literal pattern
+    ``("name".to_string(), JsonSchema::<type>(Some("desc".to_string())))``
+    (or with raw-string description, or with a const-ref name resolved via
+    same-file/protocol/tool_spec fallback). Order is source order.
+
+    Nested JsonSchema::object/array property bags inside a property — common
+    when a parameter is itself a structured object — are deliberately not
+    descended into in this first cut; only top-level scalar/array property
+    entries with a directly-captured description string surface here.
+    """
+    captures: list[ParameterCapture] = []
+    for m in _PROPERTY_RX.finditer(fn_text):
+        name_literal, name_const, schema_type = m.group(1), m.group(2), m.group(3)
+        desc_plain = m.group(4)
+        desc_raw = m.group(6)
+
+        if name_literal is not None:
+            name = name_literal.encode("utf-8", "replace").decode("unicode_escape", "replace")
+        elif name_const is not None:
+            resolved = _resolve_const_with_fallback(source_text, name_const, codex_rs_root)
+            if resolved is None:
+                # Skip — the parameter name won't be meaningful without it.
+                continue
+            name = resolved
+        else:
+            continue
+
+        if desc_raw is not None:
+            description = desc_raw
+        elif desc_plain is not None:
+            description = desc_plain.encode("utf-8", "replace").decode("unicode_escape", "replace")
+        else:
+            continue
+
+        captures.append(
+            ParameterCapture(
+                name=name,
+                schema_type=schema_type,
+                description=description,
+            )
+        )
+    return captures
+
+
 def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
     """Discover every inline ToolSpec (ResponsesApiTool) in tools/src/*.rs."""
     captures: list[ToolSpecCapture] = []
@@ -491,6 +566,13 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                         "runtime; see source)"
                     )
 
+            # Pull JsonSchema parameter descriptions from the enclosing fn.
+            # Use _enclosing_fn_text rather than the ToolSpec block itself
+            # because most properties are defined in a `let properties = …`
+            # binding immediately above the ToolSpec literal.
+            fn_text_for_params = _enclosing_fn_text(text, m.start())
+            params = _extract_parameters(fn_text_for_params, text, codex_rs_root)
+
             captures.append(
                 ToolSpecCapture(
                     file_rel=rs.relative_to(codex_rs_root),
@@ -500,6 +582,7 @@ def walk(codex_rs_root: Path) -> list[ToolSpecCapture]:
                     description_kind=kind,
                     let_binding_kind=let_kind,
                     fn_callee=fn_callee,
+                    parameters=params,
                 )
             )
     return captures
