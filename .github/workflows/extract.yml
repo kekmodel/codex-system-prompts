@@ -1,17 +1,13 @@
-# Auto-mirror upstream codex tags (SPEC §8.3 — automated mode)
+# Mirror upstream codex tags (SPEC §8.3 — manual mode)
 #
-# Polls openai/codex for new rust-v* tags hourly. When a new tag is detected
-# that's ahead of the current mirror snapshot, runs the extractor against
-# the new tag and opens a PR titled "Update mirror for <tag>" containing
-# the prompt diff + auto-generated CHANGELOG entry.
-#
-# Manual dispatch is also supported (workflow_dispatch).
+# Manual dispatch only. When invoked, runs the extractor against the
+# specified upstream tag (or the latest rust-v* tag if none given) and
+# opens a PR titled "Update mirror for <tag>" containing the prompt diff
+# + auto-generated CHANGELOG entry.
 
 name: Mirror upstream codex
 
 on:
-  schedule:
-    - cron: '0 * * * *'      # hourly
   workflow_dispatch:
     inputs:
       tag:
