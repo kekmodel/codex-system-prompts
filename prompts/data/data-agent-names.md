@@ -1,13 +1,13 @@
 ---
 name: 'Data: data-agent-names'
 category: data
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.129.0-alpha.2
+codex_commit: 4a68cd56fbc355a8726f6410f890e1840d5ff74a
 source:
   path: codex-rs/core/src/agent/agent_names.txt
   kind: include_str
   reached_from:
-  - control.rs:45
+  - control.rs:43
 extraction:
   pass: 1
   method: file

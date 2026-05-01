@@ -1,8 +1,8 @@
 ---
 name: 'Base instructions: gpt-5.5'
 category: base-instructions
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.129.0-alpha.2
+codex_commit: 4a68cd56fbc355a8726f6410f890e1840d5ff74a
 source:
   path: codex-rs/models-manager/models.json
   kind: json_field

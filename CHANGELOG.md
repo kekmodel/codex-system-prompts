@@ -2,6 +2,19 @@
 
 > Per-mirror-tag prompt diffs, newest first. Format mirrors Piebald's [`claude-code-system-prompts/CHANGELOG.md`](https://github.com/Piebald-AI/claude-code-system-prompts/blob/main/CHANGELOG.md). See [SPEC §3.5](./SPEC.md#35-changelog-strategy).
 
+# [rust-v0.129.0-alpha.2](https://github.com/openai/codex/releases/tag/rust-v0.129.0-alpha.2)
+
+_+252 tokens_
+
+Diff vs. previous mirror tag `rust-v0.128.0-alpha.1` at codex commit `4a68cd56fbc355a8726f6410f890e1840d5ff74a`. NEW: 1, MODIFIED: 1, MOVED: 0, REMOVED: 0.
+
+## `prompts/memory/`
+
+- **NEW:** `memory-write-instructions.md` (**151** tk) — `codex-rs/memories/write/templates/extensions/ad_hoc/instructions.md`
+- `memory-read-read-path.md` — token Δ +101 (1,532 → 1,633).
+
+---
+
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
 _+7,627 tokens_

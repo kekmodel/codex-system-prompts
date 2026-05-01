@@ -1,8 +1,8 @@
 ---
 name: 'Memory: memory-read-read-path'
 category: memory
-codex_version: rust-v0.128.0-alpha.1
-codex_commit: 8148b7b1f8660e464661743587f754471ae60868
+codex_version: rust-v0.129.0-alpha.2
+codex_commit: 4a68cd56fbc355a8726f6410f890e1840d5ff74a
 source:
   path: codex-rs/memories/read/templates/memories/read_path.md
   kind: include_str
@@ -13,15 +13,13 @@ extraction:
   method: file
 variables: []
 tokens:
-  o200k_base: 1532
+  o200k_base: 1633
 description: '`codex-rs/memories/read/templates/memories/read_path.md`'
 ---
 ## Memory
 
 You have access to a memory folder with guidance from prior runs. It can save
 time and help you stay consistent. Use it whenever it is likely to help.
-
-Never update memories. You can only read them.
 
 Decision boundary: should you use memory for a new user query?
 
@@ -138,6 +136,14 @@ rollout_summaries/2026-02-17T21-23-02-LN3m-weekly_memory_report_pivot_from_git_h
   - For every `citation_entries`, try to find and cite the corresponding rollout id if possible
 - Never include memory citations inside pull-request messages.
 - Never cite blank lines; double-check ranges.
+
+Updating memories:
+
+You can update the memories **only** when explicitly asked by the user. This must always come from a direct request from the user.
+- Write your update in {{ base_path }}/extensions/ad_hoc/notes/
+- Each update must be one small file containing what you want to add/delete/update from the memories.
+- The name of this file must be `<timestamp>-<short slug>.md`
+- Do not try to edit the memory files yourself, only add one update note in {{ base_path }}/extensions/ad_hoc/notes/
 
 ========= MEMORY_SUMMARY BEGINS =========
 {{ memory_summary }}
