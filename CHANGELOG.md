@@ -2,6 +2,51 @@
 
 > Per-mirror-tag prompt diffs, newest first. Format mirrors Piebald's [`claude-code-system-prompts/CHANGELOG.md`](https://github.com/Piebald-AI/claude-code-system-prompts/blob/main/CHANGELOG.md). See [SPEC §3.5](./SPEC.md#35-changelog-strategy).
 
+# [rust-v0.129.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.129.0-alpha.1)
+
+_+170 tokens_
+
+Diff vs. previous mirror tag `rust-v0.128.0-alpha.1` at codex commit `4d8f88e1458d931b940c27dd93e43e6b4b6cf92f`. NEW: 0, MODIFIED: 34, MOVED: 0, REMOVED: 0.
+
+## `prompts/tool/`
+
+- `tool-apply-patch.md` — token Δ +5 (856 → 861).
+- `tool-close-agent-v2.md` — token Δ +5 (124 → 129).
+- `tool-close-agent.md` — token Δ +5 (120 → 125).
+- `tool-create-goal.md` — token Δ +5 (188 → 193).
+- `tool-exec-command-unix.md` — token Δ +5 (311 → 316).
+- `tool-exec-command-windows.md` — token Δ +5 (315 → 320).
+- `tool-followup-task.md` — token Δ +5 (160 → 165).
+- `tool-get-goal.md` — token Δ +5 (72 → 77).
+- `tool-list-agents.md` — token Δ +5 (110 → 115).
+- `tool-list-dir.md` — token Δ +5 (190 → 195).
+- `tool-list-mcp-resource-templates.md` — token Δ +5 (172 → 177).
+- `tool-list-mcp-resources.md` — token Δ +5 (161 → 166).
+- `tool-read-mcp-resource.md` — token Δ +5 (147 → 152).
+- `tool-report-agent-job-result.md` — token Δ +5 (159 → 164).
+- `tool-request-permissions.md` — token Δ +5 (133 → 138).
+- `tool-request-user-input.md` — token Δ +5 (226 → 231).
+- `tool-resume-agent.md` — token Δ +5 (92 → 97).
+- `tool-send-input.md` — token Δ +5 (197 → 202).
+- `tool-send-message.md` — token Δ +5 (132 → 137).
+- `tool-shell-command-unix.md` — token Δ +5 (206 → 211).
+- `tool-shell-command-windows.md` — token Δ +5 (345 → 350).
+- `tool-shell-unix.md` — token Δ +5 (174 → 179).
+- `tool-shell-windows.md` — token Δ +5 (379 → 384).
+- `tool-spawn-agent-v2.md` — token Δ +5 (313 → 318).
+- `tool-spawn-agent.md` — token Δ +5 (878 → 883).
+- `tool-spawn-agents-on-csv.md` — token Δ +5 (374 → 379).
+- `tool-test-sync-tool.md` — token Δ +5 (211 → 216).
+- `tool-tool-suggest.md` — token Δ +5 (657 → 662).
+- `tool-update-goal.md` — token Δ +5 (160 → 165).
+- `tool-update-plan.md` — token Δ +5 (118 → 123).
+- `tool-view-image.md` — token Δ +5 (191 → 196).
+- `tool-wait-agent-v2.md` — token Δ +5 (98 → 103).
+- `tool-wait-agent.md` — token Δ +5 (94 → 99).
+- `tool-write-stdin.md` — token Δ +5 (192 → 197).
+
+---
+
 # [rust-v0.128.0-alpha.1](https://github.com/openai/codex/releases/tag/rust-v0.128.0-alpha.1)
 
 _+7,627 tokens_
